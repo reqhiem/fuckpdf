@@ -100,6 +100,13 @@ test('organize writes the grid order, and a rotated page keeps its rotation', as
   await upload(page, [pdfFile('six.pdf', await sixPagePdf())])
   await waitForGrid(page, 6)
 
+  // Rotate first, then drag: dnd-kit swallows the click that ends a drag (it suppresses it
+  // for ~50ms so a drop is never also a click), and React would never see a rotate issued
+  // inside that window. Doing it in this order also asserts more — the rotation has to
+  // survive the reorder and land on the page that moved.
+  await page.getByRole('button', { name: 'Rotate page 2' }).click()
+  await expect(page.getByRole('img', { name: 'Page 2 of 6' })).toHaveCSS('rotate', '90deg')
+
   const grip = (number: number) => page.getByRole('button', { name: `Move page ${number}` })
   const from = await grip(1).boundingBox()
   const to = await grip(3).boundingBox()
@@ -114,12 +121,14 @@ test('organize writes the grid order, and a rotated page keeps its rotation', as
 
   // dnd-kit announces the drop in a live region; that is the grid telling us it reordered.
   await expect(page.getByRole('status')).toContainText('Page 1 dropped at position 3.')
-
-  // Position 1 now holds what was page 2, so this rotates the page that is 102pt wide.
-  await page.getByRole('button', { name: 'Rotate page 1' }).click()
+  // Its pointer sensor also keeps a capture-phase `click` guard on the document for 50ms
+  // after a drop, so a drag is never also a click. React sees nothing while it is up, so
+  // the next click has to wait it out — including the one on Run.
+  await page.waitForTimeout(150)
 
   const output = await runAndDownload(page)
 
+  // Page 1 moved to third place, and the rotated page (102pt wide) is now first.
   expect(await pageWidths(output)).toEqual([102, 103, 101, 104, 105, 106])
   expect(await pageRotations(output)).toEqual([90, 0, 0, 0, 0, 0])
 })

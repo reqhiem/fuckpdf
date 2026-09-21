@@ -13,3 +13,19 @@ test('the shell exposes tools and opens a tool dropzone', async ({ page }) => {
       .or(page.getByLabel(/drop|choose|select.*file/i)),
   ).toBeVisible()
 })
+
+test('the page-numbers position picker is reachable by name', async ({ page }) => {
+  await page.goto('/page-numbers')
+
+  const group = page.getByRole('group', { name: /position/i })
+  await expect(group).toBeVisible()
+  await expect(group.getByRole('button')).toHaveCount(9)
+
+  const bottomCentre = group.getByRole('button', { name: /bottom centre/i })
+  await expect(bottomCentre).toHaveAttribute('aria-pressed', 'true')
+
+  const topLeft = group.getByRole('button', { name: /top left/i })
+  await topLeft.click()
+  await expect(topLeft).toHaveAttribute('aria-pressed', 'true')
+  await expect(bottomCentre).toHaveAttribute('aria-pressed', 'false')
+})

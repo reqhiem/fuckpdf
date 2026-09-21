@@ -5,7 +5,7 @@ Milestones from PRD §9. Update the Status column as work lands.
 | Milestone | Contents | Status |
 |---|---|---|
 | **M0 Shell** | Vite/React/Tailwind scaffold, tokens, landing, tool page template, dropzone, worker RPC, PDFium thumbnail rendering, Cloudflare deploy with headers, CSP, zero-egress E2E test | **done** |
-| **M1 Structural tools** | Merge, Split, Remove, Extract, Organize, Rotate, Page numbers, Watermark, Crop, JPG→PDF, PDF→JPG | **done**, unverified in a browser per tool |
+| **M1 Structural tools** | Merge, Split, Remove, Extract, Organize, Rotate, Page numbers, Watermark, Crop, JPG→PDF, PDF→JPG | **done**, all eleven byte-verified in a browser |
 | **M2 Security & forms** | Protect, Unlock, Sign, Redact (rasterizing), Forms fill, Edit (overlays) | not started |
 | **M3 Optimize** | Compress, Repair, OCR; Ghostscript gated on D1 | not started |
 | **M4 v1 launch** | Offline SW, privacy page, licenses page, a11y pass, i18n extraction, copy pass | not started |
@@ -28,8 +28,8 @@ Per PRD §3: Office→PDF, HTML→PDF, Scan to PDF, AI summarize/translate.
 
 ## Known gaps at the end of M0/M1
 
-- Each tool step has a unit test, but only merge/rotate-level behaviour has been exercised
-  end to end in a real browser. A per-tool E2E pass is the first M2 task.
+- All eleven M1 tools are driven through the real UI in `e2e/tests/tools.spec.ts` and
+  asserted against the downloaded bytes.
 - Playwright runs chromium locally; firefox and webkit need host libraries this machine
   does not have, so they are covered by CI (`playwright install --with-deps`) only.
 - i18n loads `en` eagerly rather than lazily per locale (PRD §4.1). Irrelevant while `en`

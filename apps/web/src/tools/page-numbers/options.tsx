@@ -24,15 +24,23 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
         <span className="text-sm font-medium text-ink dark:text-paper">
           {t('options.page-numbers.position')}
         </span>
-        <div className="grid grid-cols-3 gap-2 w-32">
+        <div
+          aria-label={t('options.page-numbers.position')}
+          className="grid grid-cols-3 gap-2 w-32"
+          role="group"
+        >
           {POSITIONS.map((pos) => (
             <button
               key={pos}
               type="button"
+              // The dot inside is decorative, so the name has to come from the label.
+              aria-label={t(`options.page-numbers.anchors.${pos}`)}
+              aria-pressed={options.position === pos}
               className={`flex h-10 w-10 items-center justify-center rounded-md border focus:outline-2 focus:outline-accent ${options.position === pos ? 'border-accent bg-accent/10' : 'border-ink/20 dark:border-paper/20'}`}
               onClick={() => onChange({ ...options, position: pos })}
             >
               <div
+                aria-hidden="true"
                 className={`h-2 w-2 bg-current ${pos.includes('left') ? 'mr-auto ml-1' : pos.includes('right') ? 'ml-auto mr-1' : ''} ${pos.includes('top') ? 'mb-auto mt-1' : pos.includes('bottom') ? 'mt-auto mb-1' : ''}`}
               />
             </button>
