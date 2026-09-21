@@ -44,20 +44,23 @@ export type ToolStep<Options> = (
 
 /** Thrown when a step fails for a reason worth showing the user (NFR-7). */
 export class ToolError extends Error {
-  constructor(
-    message: string,
-    /** Copyable technical detail. Never sent anywhere. */
-    readonly detail?: string,
-  ) {
+  /** Copyable technical detail. Never sent anywhere. */
+  readonly detail: string | undefined
+
+  constructor(message: string, detail?: string) {
     super(message)
     this.name = 'ToolError'
+    this.detail = detail
   }
 }
 
 /** Thrown when an input is encrypted and no usable password was supplied (FR-5). */
 export class PasswordRequiredError extends ToolError {
-  constructor(readonly fileName: string) {
+  readonly fileName: string
+
+  constructor(fileName: string) {
     super(`"${fileName}" is password-protected.`)
     this.name = 'PasswordRequiredError'
+    this.fileName = fileName
   }
 }

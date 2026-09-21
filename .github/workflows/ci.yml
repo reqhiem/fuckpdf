@@ -1,0 +1,26 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec biome check .
+      - run: pnpm exec tsc -b --noEmit
+      - run: pnpm exec vitest run
+      - run: pnpm build
+      - run: pnpm budget
+      - run: pnpm --filter e2e exec playwright install --with-deps
+      - run: pnpm --filter e2e test

@@ -15,6 +15,7 @@
     "typecheck": "tsc -b --noEmit",
     "test": "vitest run",
     "e2e": "pnpm --filter e2e test",
+    "budget": "node scripts/check-bundle-budget.mjs",
     "deploy": "pnpm build && wrangler deploy"
   },
   "devDependencies": {

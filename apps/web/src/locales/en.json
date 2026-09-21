@@ -1,0 +1,66 @@
+{
+  "brand": { "fuck": "fuck", "pdf": "pdf" },
+  "nav": { "home": "Home", "privacy": "Privacy", "about": "About", "licenses": "Licenses" },
+  "theme": { "toggle": "Toggle colour theme" },
+  "footer": {
+    "privacy": "Your files stay in your browser. Nothing is uploaded, logged, or measured."
+  },
+  "landing": {
+    "kicker": "Browser-only PDF tools",
+    "dek": "PDF tools. No upload. No account. No bullshit.",
+    "primary": "Pick a tool",
+    "secondary": "How privacy works",
+    "search": "Search tools"
+  },
+  "groups": { "organize": "Organize", "edit": "Edit", "convert": "Convert" },
+  "tool": {
+    "back": "All tools",
+    "drop": "Drop files here",
+    "dropHint": "Click to choose files, drag them here, or paste them.",
+    "options": "Options",
+    "run": "Run tool",
+    "cancel": "Cancel",
+    "progress": "Working",
+    "results": "Results",
+    "resultReady": "Your output is ready in this browser.",
+    "download": "Download",
+    "startOver": "Start over",
+    "beforeAfter": "Before {{before}} · After {{after}}",
+    "limitSoft": "This is a large input. Your browser may need a moment.",
+    "limitHard": "This input is too large for safe browser memory use."
+  },
+  "options": {
+    "default": "Options for this tool appear here.",
+    "splitMode": "Split mode",
+    "ranges": "Custom ranges",
+    "every": "Every N pages"
+  },
+  "privacy": {
+    "title": "Privacy, without the fine print",
+    "body": "Files are processed in your browser and never uploaded. Open your browser’s Network tab to verify it. After the first load, previously used tools can work offline."
+  },
+  "about": {
+    "title": "A small tool for an annoying file format",
+    "body": "This is a browser-only PDF toolkit. It has no accounts, no server-side processing, and no tracking."
+  },
+  "licenses": {
+    "title": "Licenses",
+    "body": "This application uses open-source software. A complete dependency license inventory is generated with release builds."
+  },
+  "tools": {
+    "merge": { "name": "Merge PDF", "description": "Combine PDFs into one file." },
+    "split": { "name": "Split PDF", "description": "Break one PDF into useful pieces." },
+    "remove-pages": { "name": "Remove pages", "description": "Delete selected pages from a PDF." },
+    "extract-pages": { "name": "Extract pages", "description": "Keep only the pages you need." },
+    "organize": { "name": "Organize PDF", "description": "Reorder, rotate, or remove pages." },
+    "rotate": { "name": "Rotate PDF", "description": "Turn pages the right way up." },
+    "page-numbers": {
+      "name": "Page numbers",
+      "description": "Add page numbers where they belong."
+    },
+    "watermark": { "name": "Watermark", "description": "Add text or an image over pages." },
+    "crop": { "name": "Crop PDF", "description": "Trim page edges without drama." },
+    "jpg-to-pdf": { "name": "JPG to PDF", "description": "Turn images into a PDF." },
+    "pdf-to-jpg": { "name": "PDF to JPG", "description": "Export PDF pages as images." }
+  }
+}
