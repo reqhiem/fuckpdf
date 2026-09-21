@@ -24,8 +24,9 @@ export type RenderedPage = {
 
 export type PdfiumDocument = {
   readonly pageCount: number
-  /** Page size in PDF points, 1-based index. */
-  pageSize(page: number): { width: number; height: number }
+  /** Page size in PDF points, 1-based index. Async so a worker-backed engine can
+   * satisfy the same contract as the in-process one. */
+  pageSize(page: number): Promise<{ width: number; height: number }>
   render(options: RenderOptions): Promise<RenderedPage>
   extractText(page: number): Promise<string>
   close(): void

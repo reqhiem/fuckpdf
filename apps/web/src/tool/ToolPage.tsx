@@ -10,10 +10,13 @@ import { Button, Dropzone, Progress, Surface } from '@fuckpdf/ui'
 import { zipSync } from 'fflate'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useParams } from 'react-router'
+import { Link, useLocation } from 'react-router'
+import { PageGrid, type PageGridCrop, type PageRef } from '../components/page-grid'
 import { formatBytes } from '../lib/format'
 import { Landing } from '../shell/Landing'
+import { encode, engine } from '../workers/engine'
 import { optionsPanels } from './options-panel'
+import { GRID_TOOLS, toOrganizeOperations, toPageRangeString } from './page-selection'
 
 const SOFT_LIMIT = 100 * 1024 * 1024
 const HARD_LIMIT = 500 * 1024 * 1024
@@ -21,9 +24,11 @@ const HARD_LIMIT = 500 * 1024 * 1024
 type RunError = { message: string; detail: string }
 
 export function ToolPage() {
-  const { id } = useParams()
+  // The routes are literal slugs (`/merge`, not `/:id`), so the tool is the path itself.
+  const { pathname } = useLocation()
   const { t } = useTranslation()
-  const toolId = TOOL_IDS.find((item): item is ToolId => item === id)
+  const slug = pathname.replace(/^\/+|\/+$/g, '')
+  const toolId = TOOL_IDS.find((item): item is ToolId => item === slug)
 
   const [module, setModule] = useState<ToolModule | null>(null)
   const [options, setOptions] = useState<Record<string, unknown>>({})
@@ -34,6 +39,10 @@ export function ToolPage() {
   const [error, setError] = useState<RunError | null>(null)
   const [passwordFile, setPasswordFile] = useState<string | null>(null)
   const [password, setPassword] = useState('')
+  const [gridBytes, setGridBytes] = useState<Uint8Array | null>(null)
+  const [pages, setPages] = useState<PageRef[]>([])
+  const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
+  const [crop, setCrop] = useState<PageGridCrop | null>(null)
   const controller = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -48,6 +57,39 @@ export function ToolPage() {
       live = false
     }
   }, [toolId])
+
+  const gridCapabilities = toolId ? GRID_TOOLS[toolId] : undefined
+
+  useEffect(() => {
+    const first = files[0]
+    if (!gridCapabilities || !first) {
+      setGridBytes(null)
+      setPages([])
+      return
+    }
+    let live = true
+    void first.arrayBuffer().then(async (buffer) => {
+      if (!live) return
+      const bytes = new Uint8Array(buffer)
+      setGridBytes(bytes)
+      const doc = await engine.open(bytes)
+      try {
+        setPages(
+          Array.from({ length: doc.pageCount }, (_, index) => ({
+            id: `p${index}`,
+            number: index + 1,
+            rotation: 0,
+            sourceIndex: index,
+          })),
+        )
+      } finally {
+        doc.close()
+      }
+    })
+    return () => {
+      live = false
+    }
+  }, [files, gridCapabilities])
 
   const totalIn = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files])
   const totalOut = useMemo(
@@ -87,10 +129,14 @@ export function ToolPage() {
           ...(retryPassword ? { password: retryPassword } : {}),
         })),
       )
-      const produced = await module.run(inputs, options, {
-        signal: abort.signal,
-        onProgress: ({ value }) => setProgress(value),
-      })
+      const produced = await module.run(
+        inputs,
+        { ...options, ...gridOptions(), engine, encode },
+        {
+          signal: abort.signal,
+          onProgress: ({ value }) => setProgress(value),
+        },
+      )
       setOutputs(produced)
       setProgress(1)
       setPasswordFile(null)
@@ -108,6 +154,15 @@ export function ToolPage() {
     } finally {
       controller.current = null
     }
+  }
+
+  // The four grid tools take their real options from the grid, not from the form.
+  const gridOptions = (): Record<string, unknown> => {
+    if (toolId === 'organize') return { operations: toOrganizeOperations(pages) }
+    if (toolId === 'remove-pages' || toolId === 'extract-pages')
+      return { pages: toPageRangeString(pages, selected) }
+    if (toolId === 'crop' && crop) return { box: crop.rect }
+    return {}
   }
 
   const download = () => {
@@ -161,6 +216,19 @@ export function ToolPage() {
             onFiles={select}
           />
           {warning ? <p className="mt-3 text-sm text-danger">{warning}</p> : null}
+          {gridCapabilities && gridBytes ? (
+            <div className="mt-5">
+              <PageGrid
+                bytes={gridBytes}
+                capabilities={gridCapabilities}
+                onChange={setPages}
+                onSelectedChange={setSelected}
+                pages={pages}
+                selected={selected}
+                {...(toolId === 'crop' ? { crop, onCropChange: setCrop } : {})}
+              />
+            </div>
+          ) : null}
           {files.length ? (
             <Surface className="mt-5 divide-y divide-ink/10 p-4 dark:divide-paper/10">
               {files.map((file) => (

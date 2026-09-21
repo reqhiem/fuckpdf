@@ -10,7 +10,8 @@ Each entry: status, date, rationale, what it blocks.
 | D3 | PDF→Excel | **Cut from v1 and v1.5** | 2026-09-21 |
 | D4 | "SFW mode" toggle | **No** | 2026-09-21 |
 | D5 | Repo license | **MIT** (v1) | 2026-09-21 |
-| D6 | Monorepo layout per PRD §7 | **Accepted as specified** | 2026-09-21 |
+| D6 | Monorepo layout per PRD §7 | **Accepted, two packages dropped** | 2026-09-21 |
+| D7 | Vite 8 / TypeScript 6 instead of Vite 7 | **Accepted** | 2026-09-21 |
 
 ---
 
@@ -53,3 +54,22 @@ PRD §7 specifies `apps/web`, `packages/engine-*`, `packages/tools`, `packages/u
 Kept. `packages/*` start thin — no abstraction until a second consumer exists. The split
 earns its keep because engine adapters and tool steps must run under Node in CI without a
 DOM (PRD §4.1 testing row), which is the actual reason for the boundary.
+
+
+## D7 — Vite 8 and TypeScript 6
+
+PRD §4.1 says Vite 7. `pnpm create vite` now scaffolds Vite 8 with TypeScript 6, which
+carries every capability the PRD picked Vite 7 for (worker bundling, `?url` wasm imports,
+per-tool code splitting) and is the version that will actually receive fixes. Taken as
+written rather than downgraded.
+
+## D6 addendum — packages that were not created
+
+`packages/engine-pdflib` was dropped: pdf-lib is already pure JS and Node-testable, so an
+adapter around it would have been a wrapper with one implementation and no second consumer.
+`packages/tools` imports `pdf-lib` directly. `packages/engine-qpdf` is deferred to M2, when
+there is something to put in it.
+
+`packages/engine-pdfium` earns its boundary: wasm instantiation, document lifetime and
+memory release are real, and the same contract is implemented twice — in-process for Node
+tests, and over a Web Worker for the browser (`apps/web/src/workers/engine.ts`).

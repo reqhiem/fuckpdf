@@ -15,7 +15,7 @@ import {
   Trash2,
   X,
 } from 'lucide-react'
-import type { CSSProperties, MouseEvent, PointerEvent } from 'react'
+import type { CSSProperties, MouseEvent, PointerEvent as ReactPointerEvent, Ref } from 'react'
 import { useCallback, useEffect, useRef, useState, useSyncExternalStore } from 'react'
 import { useTranslation } from 'react-i18next'
 import { BLANK_PAGE_SOURCE_INDEX } from './blank'
@@ -110,7 +110,6 @@ export function PageCell({
   }
 
   const image = useRef<HTMLImageElement | null>(null)
-  const origin = useRef<Point | null>(null)
   const dragged = useRef(false)
   const [drag, setDrag] = useState<DragRect | null>(null)
   // Where the painted image sits inside the square cell, so the overlay lands on it.
@@ -119,35 +118,53 @@ export function PageCell({
     if (!cropActive) setDrag(null)
   }, [cropActive])
 
+  // A crop gesture runs on window listeners rather than pointer capture: the rectangle
+  // re-renders this cell on every move, and a re-render drops an element's capture.
+  const stopGesture = useRef<(() => void) | null>(null)
+  useEffect(() => () => stopGesture.current?.(), [])
+
   const canCrop = cropEnabled && !blank && !!thumbnail?.size
 
-  const startCrop = (event: PointerEvent<HTMLButtonElement>) => {
+  const startCrop = (event: ReactPointerEvent<HTMLButtonElement>) => {
     const box = image.current?.getBoundingClientRect()
     if (!canCrop || event.button !== 0 || !box) return
     const frame = event.currentTarget.getBoundingClientRect()
     setInset({ x: box.left - frame.left, y: box.top - frame.top })
-    origin.current = { x: event.clientX - box.left, y: event.clientY - box.top }
     dragged.current = false
-    event.currentTarget.setPointerCapture(event.pointerId)
-  }
 
-  const moveCrop = (event: PointerEvent<HTMLButtonElement>) => {
-    const from = origin.current
-    const box = image.current?.getBoundingClientRect()
-    if (!from || !box) return
-    const rect = normalize(from, { x: event.clientX - box.left, y: event.clientY - box.top })
-    if (rect.width < DRAG_THRESHOLD && rect.height < DRAG_THRESHOLD) return
-    dragged.current = true
-    setDrag(rect)
-  }
-
-  const endCrop = () => {
-    if (!origin.current) return
-    origin.current = null
-    const box = image.current?.getBoundingClientRect()
+    const origin: Point = { x: event.clientX - box.left, y: event.clientY - box.top }
+    let rect: DragRect | null = null
     const size = thumbnail?.size
-    if (!dragged.current || !drag || !box || !size) return
-    onCrop(page.id, toPdfPoints(drag, box, size, page.rotation))
+
+    const move = (moved: PointerEvent) => {
+      const current = image.current?.getBoundingClientRect()
+      if (!current) return
+      const next = normalize(origin, {
+        x: moved.clientX - current.left,
+        y: moved.clientY - current.top,
+      })
+      if (next.width < DRAG_THRESHOLD && next.height < DRAG_THRESHOLD) return
+      dragged.current = true
+      rect = next
+      setDrag(next)
+    }
+    const detach = () => {
+      window.removeEventListener('pointermove', move)
+      window.removeEventListener('pointerup', finish)
+      window.removeEventListener('pointercancel', detach)
+      stopGesture.current = null
+    }
+    const finish = () => {
+      const current = image.current?.getBoundingClientRect()
+      detach()
+      if (!rect || !current || !size) return
+      onCrop(page.id, toPdfPoints(rect, current, size, page.rotation))
+    }
+
+    stopGesture.current = detach
+    window.addEventListener('pointermove', move)
+    window.addEventListener('pointerup', finish)
+    window.addEventListener('pointercancel', detach)
   }
 
   const click = (event: MouseEvent<HTMLButtonElement>) => {
@@ -183,12 +200,9 @@ export function PageCell({
     >
       <button
         aria-pressed={capabilities.select ? selected : undefined}
-        className="relative flex aspect-square w-full touch-none items-center justify-center overflow-hidden rounded-xl bg-ink/5 dark:bg-paper/5"
+        className="relative flex aspect-square w-full touch-none select-none items-center justify-center overflow-hidden rounded-xl bg-ink/5 dark:bg-paper/5"
         onClick={click}
-        onLostPointerCapture={endCrop}
         onPointerDown={startCrop}
-        onPointerMove={moveCrop}
-        onPointerUp={endCrop}
         type="button"
       >
         <Thumbnail
@@ -286,7 +300,7 @@ type ThumbnailProps = {
   error: Error | undefined
   label: string
   number: number
-  ref: React.Ref<HTMLImageElement>
+  ref: Ref<HTMLImageElement>
   rotation: number
   url: string | undefined
 }
@@ -305,6 +319,9 @@ function Thumbnail({ blank, error, label, number, ref, rotation, url }: Thumbnai
       <img
         alt={label}
         className="max-h-full max-w-full object-contain"
+        // Without this the browser starts a native image drag, which cancels the pointer
+        // gesture the crop rectangle is riding on.
+        draggable={false}
         ref={ref}
         src={url}
         style={{ rotate: `${rotation}deg` }}

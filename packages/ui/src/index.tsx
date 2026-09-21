@@ -34,8 +34,13 @@ export function Surface({ className, ...props }: HTMLAttributes<HTMLElement>) {
   return <section className={cx('surface', className)} {...props} />
 }
 
-export function Card({ className, ...props }: HTMLAttributes<HTMLElement>) {
-  return <article className={cx('surface', className)} {...props} />
+/**
+ * A plain box, deliberately a `div`. Cards are often wrapped in a link, and a landmark
+ * element inside a link is skipped when the browser computes the link's accessible name —
+ * which leaves the link nameless to a screen reader.
+ */
+export function Card({ className, ...props }: HTMLAttributes<HTMLDivElement>) {
+  return <div className={cx('surface', className)} {...props} />
 }
 
 export function Badge({
@@ -106,11 +111,13 @@ export function Dropzone({ accept, disabled, label, multiple = true, onFiles }: 
       </button>
       <input
         accept={accepted}
+        aria-hidden="true"
         className="sr-only"
         disabled={disabled}
         multiple={multiple}
         onChange={(event) => receive(event.target.files)}
         ref={input}
+        tabIndex={-1}
         type="file"
       />
     </div>

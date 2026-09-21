@@ -14,7 +14,7 @@ test('pdf-to-jpg with mocked engine', async () => {
     ): Promise<T> => {
       const doc: PdfiumDocument = {
         pageCount: 2,
-        pageSize: () => ({ width: 100, height: 100 }),
+        pageSize: async () => ({ width: 100, height: 100 }),
         render: async () => {
           renderCalled = true
           return { width: 100, height: 100, data: new Uint8Array([255, 0, 0, 255]) }

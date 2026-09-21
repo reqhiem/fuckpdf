@@ -78,7 +78,7 @@ function openDocument(
   return {
     pageCount,
 
-    pageSize(page) {
+    async pageSize(page) {
       return withPage(page, (pagePtr) => ({
         width: mod.FPDF_GetPageWidthF(pagePtr),
         height: mod.FPDF_GetPageHeightF(pagePtr),

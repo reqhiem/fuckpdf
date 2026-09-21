@@ -24,7 +24,7 @@ test('opens, measures, renders and reads a PDF', async () => {
 
   await engine.withDocument(bytes, async (doc) => {
     expect(doc.pageCount).toBe(2)
-    expect(doc.pageSize(1)).toEqual({ width: 200, height: 100 })
+    expect(await doc.pageSize(1)).toEqual({ width: 200, height: 100 })
 
     const rendered = await doc.render({ page: 1, dpi: 144 })
     expect(rendered.width).toBe(400)

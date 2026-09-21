@@ -60,7 +60,7 @@ const api = {
     documents.delete(id)
   },
 
-  pageSize(id: number, page: number): { width: number; height: number } {
+  pageSize(id: number, page: number): Promise<{ width: number; height: number }> {
     return get(id).pageSize(page)
   },
 

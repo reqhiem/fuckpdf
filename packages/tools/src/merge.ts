@@ -1,5 +1,11 @@
 import { PDFDocument } from 'pdf-lib'
-import { type Output, PasswordRequiredError, type PdfInput, type RunContext, type ToolStep } from './types'
+import {
+  type Output,
+  PasswordRequiredError,
+  type PdfInput,
+  type RunContext,
+  type ToolStep,
+} from './types'
 import { checkCancel, generateOutputName, loadPdf, parsePageRange } from './utils'
 
 export type MergeOptions = {
@@ -36,8 +42,8 @@ export const run: ToolStep<Record<string, unknown>> = async (
     try {
       pdf = await loadPdf(input.bytes, input.password)
     } catch (err: unknown) {
-    if (err instanceof PasswordRequiredError) throw new PasswordRequiredError(input.name)
-    throw err
+      if (err instanceof PasswordRequiredError) throw new PasswordRequiredError(input.name)
+      throw err
     }
 
     const rangeStr = options.ranges?.[name] || ''

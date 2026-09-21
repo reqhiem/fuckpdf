@@ -27,7 +27,7 @@ test('crop flatten mocked engine', async () => {
     ): Promise<T> => {
       const doc: PdfiumDocument = {
         pageCount: 1,
-        pageSize: () => ({ width: 100, height: 100 }),
+        pageSize: async () => ({ width: 100, height: 100 }),
         render: async () => ({ width: 100, height: 100, data: new Uint8Array(40000) }),
         extractText: async () => '',
         close: () => {},

@@ -1,5 +1,11 @@
 import { PDFDocument } from 'pdf-lib'
-import { type Output, PasswordRequiredError, type PdfInput, type RunContext, type ToolStep } from './types'
+import {
+  type Output,
+  PasswordRequiredError,
+  type PdfInput,
+  type RunContext,
+  type ToolStep,
+} from './types'
 import { checkCancel, generateZipName, loadPdf, makeZip, parsePageRange } from './utils'
 
 export type SplitMode = 'custom' | 'every-n' | 'all' | 'size'
