@@ -1,0 +1,20 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "./apps/web/tsconfig.app.json"
+    },
+    {
+      "path": "./apps/web/tsconfig.node.json"
+    },
+    {
+      "path": "./packages/ui"
+    },
+    {
+      "path": "./packages/tools"
+    },
+    {
+      "path": "./packages/engine-pdfium"
+    }
+  ]
+}

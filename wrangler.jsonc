@@ -1,0 +1,10 @@
+{
+  "$schema": "node_modules/wrangler/config-schema.json",
+  "name": "fuckpdf",
+  "compatibility_date": "2026-09-21",
+  // No "main": static assets only. Zero Worker invocations, zero server code.
+  "assets": {
+    "directory": "./apps/web/dist",
+    "not_found_handling": "single-page-application"
+  }
+}

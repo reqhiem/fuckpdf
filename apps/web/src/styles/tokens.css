@@ -1,0 +1,101 @@
+@import "tailwindcss";
+
+@import "@fontsource/space-grotesk/300.css";
+@import "@fontsource/space-grotesk/400.css";
+@import "@fontsource/space-grotesk/500.css";
+@import "@fontsource/space-grotesk/600.css";
+@import "@fontsource/space-grotesk/700.css";
+@import "@fontsource/jetbrains-mono/400.css";
+@import "@fontsource/jetbrains-mono/500.css";
+
+@custom-variant dark (&:where(.dark, .dark *));
+
+@theme {
+  --font-sans: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
+  --font-mono: "JetBrains Mono", ui-monospace, monospace;
+
+  --color-ink: #0b0f14;
+  --color-paper: #f6f4ef;
+  --color-muted: #9aa0a8;
+  --color-accent: #ff5a36;
+  --color-surface: #141a21;
+  --color-surface-muted: #1b222b;
+  --color-danger: #e5484d;
+  --color-ok: #3ecf8e;
+
+  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+@layer base {
+  html {
+    background-color: var(--color-paper);
+    color: var(--color-ink);
+  }
+
+  html.dark {
+    background-color: var(--color-ink);
+    color: var(--color-paper);
+  }
+
+  body {
+    font-family: var(--font-sans);
+    min-height: 100dvh;
+    /* Two fixed washes, carried over from reqhiem.dev. */
+    background-image:
+      radial-gradient(60rem 40rem at 0% 0%, rgb(255 90 54 / 0.12), transparent 60%),
+      radial-gradient(60rem 40rem at 100% 0%, rgb(18 32 66 / 0.12), transparent 60%);
+    background-attachment: fixed;
+  }
+
+  html.dark body {
+    background-image:
+      radial-gradient(60rem 40rem at 0% 0%, rgb(255 90 54 / 0.18), transparent 60%),
+      radial-gradient(60rem 40rem at 100% 0%, rgb(18 32 66 / 0.28), transparent 60%);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 2px;
+  }
+}
+
+@layer components {
+  /* 56px schematic grid — landing hero only. */
+  .hero-grid {
+    background-image:
+      linear-gradient(to right, rgb(11 15 20 / 0.05) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(11 15 20 / 0.05) 1px, transparent 1px);
+    background-size: 56px 56px;
+  }
+
+  .dark .hero-grid {
+    background-image:
+      linear-gradient(to right, rgb(246 244 239 / 0.06) 1px, transparent 1px),
+      linear-gradient(to bottom, rgb(246 244 239 / 0.06) 1px, transparent 1px);
+  }
+
+  .surface {
+    border-radius: var(--radius-2xl);
+    border: 1px solid rgb(0 0 0 / 0.1);
+    background-color: rgb(255 255 255 / 0.8);
+    backdrop-filter: blur(8px);
+  }
+
+  .dark .surface {
+    border-color: rgb(255 255 255 / 0.1);
+    background-color: rgb(255 255 255 / 0.05);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation: none !important;
+    transition: none !important;
+  }
+}
