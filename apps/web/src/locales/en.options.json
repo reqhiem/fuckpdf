@@ -1,0 +1,80 @@
+{
+  "options": {
+    "merge": {
+      "order": "File order (one name per line)",
+      "ranges": "Page ranges (filename=1-5, one per line)"
+    },
+    "split": {
+      "mode": "Split mode",
+      "modeAll": "Extract all pages",
+      "modeCustom": "Custom ranges",
+      "modeEveryN": "Every N pages",
+      "modeSize": "By max file size",
+      "ranges": "Custom ranges (comma separated)",
+      "everyN": "Pages per split",
+      "maxSize": "Max file size (bytes)",
+      "zip": "Output as ZIP"
+    },
+    "remove-pages": {
+      "pages": "Pages to remove (e.g. 1-5, 8)"
+    },
+    "extract-pages": {
+      "pages": "Pages to extract (e.g. 1-5, 8)",
+      "split": "Extract each page to a separate file"
+    },
+    "organize": {
+      "addBlank": "Insert blank page"
+    },
+    "rotate": {
+      "angle": "Rotation angle",
+      "pages": "Pages to rotate (empty for all)"
+    },
+    "page-numbers": {
+      "position": "Position",
+      "firstNumber": "First number",
+      "pages": "Pages to number (empty for all)",
+      "format": "Format (use {n} and {total})",
+      "font": "Font",
+      "size": "Font size",
+      "color": "Text color",
+      "margin": "Margin"
+    },
+    "watermark": {
+      "type": "Watermark type",
+      "typeText": "Text",
+      "typeImage": "Image",
+      "text": "Text",
+      "image": "Image file",
+      "mode": "Placement mode",
+      "modePositioned": "Positioned",
+      "modeTiled": "Tiled",
+      "position": "Position",
+      "opacity": "Opacity",
+      "rotation": "Rotation (degrees)",
+      "layer": "Layer",
+      "layerOver": "Over content",
+      "layerUnder": "Under content",
+      "pages": "Pages to watermark",
+      "color": "Color",
+      "size": "Size"
+    },
+    "crop": {
+      "boxX": "X",
+      "boxY": "Y",
+      "boxWidth": "Width",
+      "boxHeight": "Height",
+      "pages": "Pages to crop",
+      "flatten": "Flatten (rasterize)"
+    },
+    "jpg-to-pdf": {
+      "pageSize": "Page size",
+      "orientation": "Orientation",
+      "margin": "Margin",
+      "fitMode": "Fit mode"
+    },
+    "pdf-to-jpg": {
+      "dpi": "DPI (72-300)",
+      "format": "Format"
+    }
+  }
+}

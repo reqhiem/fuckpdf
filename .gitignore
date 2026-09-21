@@ -11,3 +11,6 @@ blob-report/
 .env
 .env.*
 !.env.example
+
+# Throwaway scripts from delegated agents
+*.sh

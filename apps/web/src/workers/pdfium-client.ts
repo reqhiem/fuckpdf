@@ -74,6 +74,41 @@ export function renderThumbnail(
   return withPdf(bytes, (doc) => doc.thumbnail(page, dpi), password)
 }
 
+/** Transfers when the view owns its whole buffer, copies when it is a slice of a bigger
+ * one — transferring that would detach bytes the caller still needs. */
+const ownBuffer = (bytes: Uint8Array): ArrayBuffer =>
+  bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
+    ? (bytes.buffer as ArrayBuffer)
+    : (bytes.slice().buffer as ArrayBuffer)
+
+/**
+ * RGBA pixels → JPEG, PNG or WebP bytes, encoded in the worker via OffscreenCanvas.
+ *
+ * Shaped to be handed straight to a tool step: `format` is a plain `string` (unknown
+ * values throw) because that is what `pdf-to-jpg`'s optional `encode` option declares,
+ * and crop's flatten path takes the same. `quality` is optional and PNG ignores it.
+ *
+ * Detaches `rgba` when it owns its buffer — it is the render output, nobody reads it
+ * twice, and copying a page of pixels for nothing is what NFR-3 is about.
+ */
+export async function encode(
+  rgba: Uint8Array,
+  width: number,
+  height: number,
+  format: string,
+  quality?: number,
+): Promise<Uint8Array> {
+  const buffer = ownBuffer(rgba)
+  const encoded = await worker().encode(
+    Comlink.transfer(buffer, [buffer]),
+    width,
+    height,
+    format,
+    quality,
+  )
+  return new Uint8Array(encoded)
+}
+
 /** Comlink rebuilds a plain `Error` across the boundary, so the class is gone but the
  * name survives. Matches `PdfiumPasswordError` — the prompt-for-password case (FR-5). */
 export const isPasswordError = (error: unknown): boolean =>

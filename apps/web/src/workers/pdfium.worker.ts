@@ -26,6 +26,27 @@ const pixels = async (id: number, page: number, dpi: number) => {
   return { width, height, buffer: data.buffer as ArrayBuffer }
 }
 
+const MIME: Record<string, string | undefined> = {
+  jpeg: 'image/jpeg',
+  png: 'image/png',
+  webp: 'image/webp',
+}
+
+/** OffscreenCanvas is the only encoder a worker has; `quality` is ignored for PNG. */
+const toBlob = async (
+  rgba: ArrayBuffer,
+  width: number,
+  height: number,
+  type: string,
+  quality?: number,
+): Promise<Blob> => {
+  const canvas = new OffscreenCanvas(width, height)
+  const ctx = canvas.getContext('2d')
+  if (!ctx) throw new Error('This browser refused a 2D canvas in a worker')
+  ctx.putImageData(new ImageData(new Uint8ClampedArray(rgba), width, height), 0, 0)
+  return canvas.convertToBlob(quality === undefined ? { type } : { type, quality })
+}
+
 const api = {
   async open(bytes: ArrayBuffer, password?: string): Promise<{ id: number; pageCount: number }> {
     const doc = await engine.open(new Uint8Array(bytes), password)
@@ -57,11 +78,24 @@ const api = {
    * thread; the Blob itself crosses by reference, not by copy. */
   async thumbnail(id: number, page: number, dpi: number): Promise<Blob> {
     const { width, height, buffer } = await pixels(id, page, dpi)
-    const canvas = new OffscreenCanvas(width, height)
-    const ctx = canvas.getContext('2d')
-    if (!ctx) throw new Error('This browser refused a 2D canvas in a worker')
-    ctx.putImageData(new ImageData(new Uint8ClampedArray(buffer), width, height), 0, 0)
-    return canvas.convertToBlob({ type: 'image/png' })
+    return toBlob(buffer, width, height, 'image/png')
+  },
+
+  /** RGBA in, encoded image bytes out. Lives here so `packages/tools` can stay DOM-free
+   * (AGENTS.md invariant 5) and pixels never reach the main thread (invariant 3):
+   * `pdf-to-jpg` and crop's flatten path both take this as their `encode` option. */
+  async encode(
+    rgba: ArrayBuffer,
+    width: number,
+    height: number,
+    format: string,
+    quality?: number,
+  ): Promise<ArrayBuffer> {
+    const mime = MIME[format]
+    if (!mime) throw new Error(`Unsupported image format: ${format}`)
+    const blob = await toBlob(rgba, width, height, mime, quality)
+    const encoded = await blob.arrayBuffer()
+    return Comlink.transfer(encoded, [encoded])
   },
 }
 
