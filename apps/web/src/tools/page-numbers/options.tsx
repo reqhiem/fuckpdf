@@ -20,15 +20,11 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
 
   return (
     <div className="flex flex-col gap-4">
-      <div className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
+      <fieldset className="flex flex-col gap-1">
+        <legend className="text-sm font-medium text-ink dark:text-paper">
           {t('options.page-numbers.position')}
-        </span>
-        <div
-          aria-label={t('options.page-numbers.position')}
-          className="grid grid-cols-3 gap-2 w-32"
-          role="group"
-        >
+        </legend>
+        <div className="grid grid-cols-3 gap-2 w-32">
           {POSITIONS.map((pos) => (
             <button
               key={pos}
@@ -46,7 +42,7 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
             </button>
           ))}
         </div>
-      </div>
+      </fieldset>
 
       <label className="flex flex-col gap-1">
         <span className="text-sm font-medium text-ink dark:text-paper">

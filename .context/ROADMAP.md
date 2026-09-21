@@ -38,3 +38,19 @@ Per PRD §3: Office→PDF, HTML→PDF, Scan to PDF, AI summarize/translate.
 - `packages/engine-qpdf` does not exist yet. It arrives with M2 (Protect/Unlock). Both
   candidate packages (`qpdf-wasm` 0.1.0, `@jspawn/qpdf-wasm` 0.0.2) look unmaintained —
   verify before committing to one, as PRD §4.2 already warns.
+
+## Zero-egress: one caveat found on the real edge
+
+The deployed origin returns Cloudflare's own `nel` and `report-to` headers, pointing the
+browser at `a.nel.cloudflare.com`. `success_fraction` is `0.0`, so a browser only reports
+*network failures*, never a successful visit — but it is still a third-party endpoint the
+browser may contact, which PRD §4.3's "the only requests a browser makes are to
+fuckpdf.reqhiem.dev" does not allow.
+
+It is injected by the edge, not by `public/_headers`, so the app cannot remove it. Network
+Error Logging is a zone setting; it can be turned off once `fuckpdf.reqhiem.dev` is bound
+to a zone we control, and cannot be turned off on a `workers.dev` subdomain.
+
+The Playwright zero-egress test cannot catch this: NEL only fires on a network error, which
+a passing run never produces. Verify it with `curl -I` against the deployed origin after the
+custom domain is bound, and treat the header's absence as the acceptance criterion.
