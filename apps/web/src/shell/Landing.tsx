@@ -5,6 +5,7 @@ import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { groups, toolCount } from './groups'
+import { Seo } from './Seo'
 import { ToolCard } from './ToolCard'
 
 const proof = [
@@ -33,6 +34,7 @@ export function Landing() {
   ]
   return (
     <>
+      <Seo />
       <section className="relative isolate overflow-hidden">
         <div
           aria-hidden="true"

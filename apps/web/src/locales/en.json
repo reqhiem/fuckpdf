@@ -1,4 +1,77 @@
 {
+  "seo": {
+    "site": "fuckpdf",
+    "home": "Home",
+    "tools": "All PDF tools",
+    "how": "Drop your file, pick the options, download the result. The work happens in a Web Worker in your browser tab, so the file never leaves your device.",
+    "privacy": "No upload, no account, no watermark, no queue. Free and open source.",
+    "pages": {
+      "home": {
+        "title": "fuckpdf — free PDF tools that never upload your files",
+        "description": "Merge, split, rotate, crop, watermark, number and convert PDFs in your browser. Free, private, no upload, no sign-up. Works offline."
+      },
+      "about": {
+        "title": "About fuckpdf — browser-only PDF tools",
+        "description": "Why fuckpdf exists and how it edits PDFs entirely in your browser with PDFium and pdf-lib, without uploading anything."
+      },
+      "privacy": {
+        "title": "Privacy — your PDFs never leave your browser | fuckpdf",
+        "description": "fuckpdf processes files locally in your browser. No upload, no cookies, no analytics, no tracking. Here is how to check it yourself."
+      },
+      "licenses": {
+        "title": "Licenses — open source components | fuckpdf",
+        "description": "The open source engines, libraries and fonts fuckpdf is built on, and their licenses."
+      },
+      "merge": {
+        "title": "Merge PDF files online — free, private, no upload | fuckpdf",
+        "description": "Combine multiple PDFs into one file in your browser. Drag to reorder, then download. Free, no upload, no sign-up, no watermark."
+      },
+      "split": {
+        "title": "Split PDF online — free, private, no upload | fuckpdf",
+        "description": "Split a PDF into single pages, fixed chunks, custom page ranges or by file size, right in your browser. Free, no upload, no sign-up."
+      },
+      "remove-pages": {
+        "title": "Remove pages from PDF — free, private, no upload | fuckpdf",
+        "description": "Delete pages from a PDF by clicking them. Runs in your browser, so the file is never uploaded. Free, no sign-up."
+      },
+      "extract-pages": {
+        "title": "Extract pages from PDF — free, private, no upload | fuckpdf",
+        "description": "Pick the pages you need and save them as a new PDF, in your browser. Free, no upload, no sign-up."
+      },
+      "organize": {
+        "title": "Organize PDF pages — reorder, rotate, delete | fuckpdf",
+        "description": "Reorder, rotate and remove PDF pages with drag and drop, in your browser. Free, private, no upload."
+      },
+      "rotate": {
+        "title": "Rotate PDF pages online — free, private, no upload | fuckpdf",
+        "description": "Rotate all or selected PDF pages by 90, 180 or 270 degrees and save the result. Runs in your browser. Free, no upload."
+      },
+      "page-numbers": {
+        "title": "Add page numbers to PDF — free, private, no upload | fuckpdf",
+        "description": "Number PDF pages with your choice of position, format and starting number, in your browser. Free, no upload, no sign-up."
+      },
+      "watermark": {
+        "title": "Watermark PDF online — text or image, no upload | fuckpdf",
+        "description": "Stamp text or an image over PDF pages with custom opacity, size and position, in your browser. Free, private, no upload."
+      },
+      "crop": {
+        "title": "Crop PDF pages online — free, private, no upload | fuckpdf",
+        "description": "Trim PDF margins by drawing a crop box on the page, in your browser. Free, no upload, no sign-up."
+      },
+      "edit": {
+        "title": "Edit PDF online — add text, images, shapes | fuckpdf",
+        "description": "Add text, images, shapes and freehand ink on top of PDF pages, in your browser. Free, private, no upload, no sign-up."
+      },
+      "jpg-to-pdf": {
+        "title": "JPG to PDF — convert images to PDF, no upload | fuckpdf",
+        "description": "Turn JPG and PNG images into a single PDF in your browser. Free, private, no upload, no sign-up."
+      },
+      "pdf-to-jpg": {
+        "title": "PDF to JPG — convert PDF pages to images, no upload | fuckpdf",
+        "description": "Export PDF pages as JPG, PNG or WebP images in your browser. Free, private, no upload, no sign-up."
+      }
+    }
+  },
   "pageGrid": {
     "grid": "Pages",
     "page": "Page {{number}} of {{total}}",
@@ -35,7 +108,12 @@
     "privacy": "Privacy",
     "about": "About",
     "licenses": "Licenses",
-    "source": "Source code on GitHub"
+    "source": "Source code on GitHub",
+    "primary": "Main",
+    "edit": "Edit",
+    "merge": "Merge",
+    "split": "Split",
+    "organize": "Organize"
   },
   "theme": {
     "toggle": "Toggle colour theme"
@@ -85,6 +163,7 @@
   },
   "tool": {
     "back": "All tools",
+    "breadcrumbs": "Breadcrumb",
     "drop": "Drop files here",
     "dropHint": "Click to choose files, drag them here, or paste them.",
     "options": "Options",

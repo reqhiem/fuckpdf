@@ -44,7 +44,10 @@
 :root,
 [data-theme="light"] {
   --brand-accent: oklch(0.6839 0.2069 33.86);
-  --brand-danger: oklch(0.6256 0.1933 23.03);
+  /* The bright orange is 3.0:1 under white and 2.8:1 on paper; on paper the fill and
+   * accent text drop to a deeper vermilion that takes white text at 4.9:1. */
+  --brand-accent-deep: oklch(0.565 0.2 34);
+  --brand-danger: oklch(0.55 0.2 25);
   --brand-ok: oklch(0.7624 0.1544 159.36);
   /* Two mutes: the dark-mode grey is 2.3:1 on paper and fails AA there. */
   --brand-muted-light: oklch(0.5 0.015 255);
@@ -72,10 +75,12 @@
   --default: oklch(0.1665 0.0124 254.17 / 0.06);
   --default-foreground: var(--color-ink);
 
-  --accent: var(--brand-accent);
-  --accent-foreground: oklch(0.16 0.01 254);
+  --accent: var(--brand-accent-deep);
+  --accent-foreground: oklch(0.99 0 0);
+  --accent-hover: oklch(0.52 0.19 34);
   --danger: var(--brand-danger);
   --danger-foreground: oklch(0.99 0 0);
+  --danger-hover: oklch(0.5 0.19 25);
   --success: var(--brand-ok);
   --success-foreground: oklch(0.16 0.01 254);
   --warning: oklch(0.82 0.1388 76.34);
@@ -89,7 +94,7 @@
 
   --border: oklch(0.1665 0.0124 254.17 / 0.12);
   --separator: oklch(0.1665 0.0124 254.17 / 0.1);
-  --focus: var(--brand-accent);
+  --focus: var(--accent);
   --link: var(--color-ink);
   --backdrop: oklch(0.1665 0.0124 254.17 / 0.45);
 
@@ -117,6 +122,10 @@ html.dark,
 
   --muted: var(--brand-muted-dark);
   --default: oklch(1 0 0 / 0.08);
+
+  --accent: var(--brand-accent);
+  --accent-foreground: oklch(0.16 0.01 254);
+  --accent-hover: oklch(0.73 0.16 40);
   --default-foreground: var(--color-paper);
 
   --field-background: oklch(1 0 0 / 0.04);
@@ -163,7 +172,7 @@ html.dark,
   }
 
   :focus-visible {
-    outline: 2px solid var(--brand-accent);
+    outline: 2px solid var(--focus);
     outline-offset: 2px;
   }
 

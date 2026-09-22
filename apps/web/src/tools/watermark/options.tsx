@@ -1,6 +1,7 @@
 import type { WatermarkOptions } from '@fuckpdf/tools'
 import {
   Button,
+  ColorChoice,
   Description,
   Fieldset,
   Input,
@@ -40,8 +41,6 @@ const LAYERS = [
   { id: 'under', label: 'layerUnder' },
 ] as const
 
-const HEX = /^[0-9a-fA-F]{6}$/
-
 export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelProps) {
   const { t } = useTranslation()
   const options = value as WatermarkOptions
@@ -50,6 +49,12 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
   const position = options.position ?? 'center'
   const layer = options.layer ?? 'over'
   const color = options.color ?? '000000'
+  const colourLabels = {
+    custom: t('options.colour.custom'),
+    area: t('options.colour.area'),
+    hue: t('options.colour.hue'),
+    hex: t('options.colour.hex'),
+  }
   const picker = useRef<HTMLInputElement>(null)
   const [imageName, setImageName] = useState<string>()
 
@@ -106,20 +111,12 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
 
       {type === 'text' && (
         <>
-          <TextField onChange={(next) => onChange({ ...options, color: next })} value={color}>
-            <Label>{t('options.watermark.color')}</Label>
-            <div className="flex items-center gap-2">
-              <Input className="measure" />
-              <input
-                aria-label={t('options.watermark.colorSwatch')}
-                className="size-9 shrink-0 cursor-pointer rounded-[var(--radius)] border border-[var(--border)] bg-transparent"
-                onChange={(event) => onChange({ ...options, color: event.target.value.slice(1) })}
-                type="color"
-                value={HEX.test(color) ? `#${color}` : '#000000'}
-              />
-            </div>
-            <Description>{t('options.watermark.colorHint')}</Description>
-          </TextField>
+          <ColorChoice
+            label={t('options.watermark.color')}
+            labels={colourLabels}
+            onChange={(next) => onChange({ ...options, color: next })}
+            value={color}
+          />
 
           <NumberField
             minValue={1}

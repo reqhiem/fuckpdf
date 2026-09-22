@@ -187,7 +187,11 @@ export function PageCell({
 
   return (
     <li
-      className={cx('relative', sortable.isDragging && 'z-10 opacity-80')}
+      className={cx(
+        'hairline relative flex flex-col self-start overflow-hidden rounded-[var(--radius)] border bg-ink/[0.03] dark:bg-paper/[0.04]',
+        capabilities.select && selected && 'border-accent',
+        sortable.isDragging && 'z-10 opacity-80 shadow-lg',
+      )}
       ref={(node) => {
         cell.current = node
         sortable.setNodeRef(node)
@@ -197,7 +201,7 @@ export function PageCell({
       <Frame
         aria-pressed={capabilities.select ? selected : undefined}
         className={cx(
-          'group relative flex aspect-[3/4] w-full touch-none select-none items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-accent',
+          'group relative flex aspect-square min-h-0 w-full touch-none select-none items-center justify-center p-3 outline-none focus-visible:ring-2 focus-visible:ring-accent focus-visible:ring-inset',
           (capabilities.select || canCrop) && 'cursor-pointer',
           canCrop && 'cursor-crosshair',
         )}
@@ -229,7 +233,7 @@ export function PageCell({
         ) : null}
       </Frame>
 
-      <div className="mt-1 flex h-8 items-center">
+      <div className="hairline flex h-9 items-center border-t px-0.5">
         <span
           className={cx(
             'measure mr-auto flex items-center gap-1 pl-1 text-xs',
@@ -281,7 +285,7 @@ export function PageCell({
       </div>
 
       {cropActive ? (
-        <div className="flex items-center gap-1 pl-1 text-muted">
+        <div className="hairline flex items-center gap-1 border-t pl-1.5 text-muted">
           <CropIcon aria-hidden="true" size={14} />
           <span className="mr-auto text-xs">{t('pageGrid.cropped')}</span>
           <IconButton
@@ -323,7 +327,7 @@ function Thumbnail({ blank, error, label, number, ref, rotation, selected, url }
       <span
         className={cx(
           sheet,
-          'flex h-full w-[94%] flex-col items-center justify-center gap-2 text-ink/60',
+          'flex aspect-[1/1.294] h-full flex-col items-center justify-center gap-2 text-ink/60',
         )}
       >
         <FileText aria-hidden="true" size={24} />
@@ -352,7 +356,7 @@ function Thumbnail({ blank, error, label, number, ref, rotation, selected, url }
   // The cell may be a button, so the label stays even while there is nothing to show.
   return (
     <>
-      <Skeleton className="h-full w-[94%] rounded-sm" />
+      <Skeleton className="aspect-[1/1.294] h-full rounded-sm" />
       <span className="sr-only">{t('pageGrid.loading', { number })}</span>
     </>
   )

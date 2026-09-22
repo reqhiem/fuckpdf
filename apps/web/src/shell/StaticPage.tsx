@@ -1,4 +1,5 @@
 import { useTranslation } from 'react-i18next'
+import { Seo } from './Seo'
 
 type Page = 'privacy' | 'about' | 'licenses'
 
@@ -12,6 +13,7 @@ export function StaticPage({ page }: { page: Page }) {
   const { t } = useTranslation()
   return (
     <article className="mx-auto max-w-7xl px-6 py-16">
+      <Seo />
       <div className="max-w-[68ch]">
         <h1 className="text-4xl font-bold tracking-[-0.03em] sm:text-5xl">{t(`${page}.title`)}</h1>
         <p className="mt-6 text-lg leading-8">{t(`${page}.lead`)}</p>

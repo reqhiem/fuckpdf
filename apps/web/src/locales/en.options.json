@@ -1,5 +1,11 @@
 {
   "options": {
+    "colour": {
+      "custom": "Custom color",
+      "area": "Saturation and brightness",
+      "hue": "Hue",
+      "hex": "Hex"
+    },
     "merge": {
       "ranges": "Pages from each file",
       "rangesHint": "Optional. One file per line, as name=pages. Files not listed keep every page.",
@@ -42,8 +48,6 @@
       "fontTimesRoman": "Times Roman",
       "size": "Size (pt)",
       "color": "Text color",
-      "colorHint": "Six hex digits, no leading hash.",
-      "colorSwatch": "Pick the text color",
       "margin": "Margin (pt)",
       "anchors": {
         "top-left": "Top left",
@@ -82,8 +86,6 @@
       "pages": "Pages",
       "pagesHint": "Empty marks every page. Ranges work, e.g. 1-5, 8.",
       "color": "Color",
-      "colorHint": "Six hex digits, no leading hash.",
-      "colorSwatch": "Pick the text color",
       "size": "Size (pt)"
     },
     "crop": {

@@ -7,6 +7,7 @@ import { useEffect, useRef, useState } from 'react'
 export type { ButtonProps } from '@heroui/react'
 export {
   Alert,
+  Breadcrumbs,
   Button,
   Card,
   Checkbox,
@@ -21,6 +22,7 @@ export {
   ColorSwatchPicker,
   Description,
   Disclosure,
+  Dropdown,
   FieldError,
   Fieldset,
   Form,
@@ -36,6 +38,7 @@ export {
   ProgressBar,
   Radio,
   RadioGroup,
+  RouterProvider,
   SearchField,
   Select,
   Separator,
@@ -51,6 +54,7 @@ export {
   Tooltip,
   Typography,
 } from '@heroui/react'
+export { ColorChoice } from './color-choice'
 
 export function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ')

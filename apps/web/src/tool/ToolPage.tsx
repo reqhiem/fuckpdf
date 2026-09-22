@@ -10,6 +10,7 @@ import {
 } from '@fuckpdf/tools'
 import {
   Alert,
+  Breadcrumbs,
   Button,
   Description,
   Disclosure,
@@ -21,15 +22,17 @@ import {
   TextField,
 } from '@fuckpdf/ui'
 import { zipSync } from 'fflate'
-import { Check, Copy } from 'lucide-react'
+import { Check, ChevronRight, Copy } from 'lucide-react'
 import { lazy, type ReactNode, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation } from 'react-router'
+import { useLocation } from 'react-router'
 import { FileStrip } from '../components/file-strip'
 import { LivePreview } from '../components/live-preview'
 import { PageGrid, type PageGridCrop, type PageRef } from '../components/page-grid'
 import { formatBytes, formatTypes } from '../lib/format'
+import { groups } from '../shell/groups'
 import { Landing } from '../shell/Landing'
+import { Seo } from '../shell/Seo'
 import { encode, engine } from '../workers/engine'
 import { optionsPanels } from './options-panel'
 import {
@@ -316,11 +319,25 @@ export function ToolPage() {
       </Suspense>
     )
 
+  const groupName = groups.find((g) => [...g.half, ...g.third].includes(toolId))?.name
+
   return (
     <div className="mx-auto max-w-7xl px-6 py-8">
-      <Link className="text-sm text-muted" to="/">
-        {t('tool.back')}
-      </Link>
+      <Seo />
+      <Breadcrumbs aria-label={t('tool.breadcrumbs')} className="-my-2 flex-wrap [&_.link]:py-2">
+        <Breadcrumbs.Item href="/">{t('tool.back')}</Breadcrumbs.Item>
+        {groupName ? (
+          <Breadcrumbs.Item>
+            {() => (
+              <>
+                <span className="text-sm font-medium text-muted">{t(`groups.${groupName}`)}</span>
+                <ChevronRight aria-hidden="true" className="breadcrumbs__separator" />
+              </>
+            )}
+          </Breadcrumbs.Item>
+        ) : null}
+        <Breadcrumbs.Item>{t(`tools.${toolId}.name`)}</Breadcrumbs.Item>
+      </Breadcrumbs>
       <h1 className="mt-3 text-3xl font-bold tracking-tight">{t(`tools.${toolId}.name`)}</h1>
       <p className="mt-1 text-muted">{t(`tools.${toolId}.description`)}</p>
 

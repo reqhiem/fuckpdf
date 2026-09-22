@@ -4,9 +4,7 @@ import type { EditElement, EditFont } from '@fuckpdf/tools'
 import {
   Button,
   CloseButton,
-  ColorField,
-  ColorSwatch,
-  ColorSwatchPicker,
+  ColorChoice,
   Description,
   Fieldset,
   IconButton,
@@ -30,8 +28,6 @@ import type { OptionsPanelProps } from '../../tool/options-panel'
 const FONTS: EditFont[] = ['helvetica', 'times', 'courier']
 const PDF_MAX_POINTS = 14400
 const SWATCHES = ['1a1a1a', 'ffffff', 'e03131', 'f08c00', 'ffe14d', '2f9e44', '1971c2', '7048e8']
-// Keeps white on paper and ink on the dark ground visible.
-const RING = 'shadow-[inset_0_0_0_1px_var(--border)]'
 const IS_MAC = typeof navigator !== 'undefined' && /Mac|iP(hone|ad)/.test(navigator.platform)
 
 const round = (value: number) => Math.round(value * 10) / 10
@@ -364,17 +360,12 @@ type ColourProps = {
 
 function Colour({ label, value, optional = false, onChange }: ColourProps) {
   const { t } = useTranslation()
-  const colour = value ? `#${value}` : null
-  const pick = (next: { toString: (format: 'hex') => string } | null) => {
-    if (next) onChange(next.toString('hex').slice(1).toLowerCase())
-  }
 
   return (
-    <Fieldset className="gap-2">
-      <div className="flex items-center justify-between">
-        <Fieldset.Legend>{label}</Fieldset.Legend>
-        {optional ? (
-          colour ? (
+    <ColorChoice
+      action={
+        optional ? (
+          value ? (
             <IconButton
               label={t('edit.inspector.remove', { label: label.toLowerCase() })}
               onPress={() => onChange('')}
@@ -389,34 +380,19 @@ function Colour({ label, value, optional = false, onChange }: ColourProps) {
               <Plus aria-hidden={true} size={14} />
             </IconButton>
           )
-        ) : null}
-      </div>
-      {colour ? (
-        <>
-          <ColorSwatchPicker aria-label={label} onChange={pick} size="xs" value={colour}>
-            {SWATCHES.map((swatch) => (
-              <ColorSwatchPicker.Item color={`#${swatch}`} key={swatch}>
-                <ColorSwatchPicker.Swatch className={RING} />
-                <ColorSwatchPicker.Indicator />
-              </ColorSwatchPicker.Item>
-            ))}
-          </ColorSwatchPicker>
-          <ColorField
-            aria-label={t('edit.inspector.hex', { label })}
-            onChange={pick}
-            value={colour}
-          >
-            <ColorField.Group>
-              <ColorField.Prefix>
-                <ColorSwatch className={RING} color={colour} size="xs" />
-              </ColorField.Prefix>
-              <ColorField.Input className="measure" />
-            </ColorField.Group>
-          </ColorField>
-        </>
-      ) : (
-        <p className="text-xs text-muted">{t('edit.inspector.none')}</p>
-      )}
-    </Fieldset>
+        ) : null
+      }
+      empty={<p className="text-xs text-muted">{t('edit.inspector.none')}</p>}
+      label={label}
+      labels={{
+        custom: t('edit.inspector.custom', { label: label.toLowerCase() }),
+        area: t('options.colour.area'),
+        hue: t('options.colour.hue'),
+        hex: t('edit.inspector.hex', { label }),
+      }}
+      onChange={onChange}
+      swatches={SWATCHES}
+      value={value}
+    />
   )
 }

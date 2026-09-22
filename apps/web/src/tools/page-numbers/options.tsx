@@ -1,5 +1,6 @@
 import type { PageNumbersOptions, PositionAnchor } from '@fuckpdf/tools'
 import {
+  ColorChoice,
   Description,
   Fieldset,
   Input,
@@ -31,13 +32,17 @@ const FONTS = [
   { id: 'Times-Roman', label: 'fontTimesRoman' },
 ] as const
 
-const HEX = /^[0-9a-fA-F]{6}$/
-
 export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPanelProps) {
   const { t } = useTranslation()
   const options = value as PageNumbersOptions
   const font = options.font ?? 'Helvetica'
   const color = options.color ?? '000000'
+  const colourLabels = {
+    custom: t('options.colour.custom'),
+    area: t('options.colour.area'),
+    hue: t('options.colour.hue'),
+    hex: t('options.colour.hex'),
+  }
 
   return (
     <div className="flex flex-col gap-4">
@@ -146,20 +151,12 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
         </NumberField.Group>
       </NumberField>
 
-      <TextField onChange={(next) => onChange({ ...options, color: next })} value={color}>
-        <Label>{t('options.page-numbers.color')}</Label>
-        <div className="flex items-center gap-2">
-          <Input className="measure" />
-          <input
-            aria-label={t('options.page-numbers.colorSwatch')}
-            className="size-9 shrink-0 cursor-pointer rounded-[var(--radius)] border border-[var(--border)] bg-transparent"
-            onChange={(event) => onChange({ ...options, color: event.target.value.slice(1) })}
-            type="color"
-            value={HEX.test(color) ? `#${color}` : '#000000'}
-          />
-        </div>
-        <Description>{t('options.page-numbers.colorHint')}</Description>
-      </TextField>
+      <ColorChoice
+        label={t('options.page-numbers.color')}
+        labels={colourLabels}
+        onChange={(next) => onChange({ ...options, color: next })}
+        value={color}
+      />
     </div>
   )
 }

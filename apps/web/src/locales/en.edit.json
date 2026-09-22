@@ -59,6 +59,7 @@
       "keyZoom": "Zoom",
       "keyUndo": "Undo",
       "hex": "{{label}} hex",
+      "custom": "Custom {{label}}",
       "add": "Add {{label}}",
       "remove": "Remove {{label}}",
       "none": "None",
