@@ -6,7 +6,8 @@
   "main": "./src/index.tsx",
   "types": "./src/index.tsx",
   "exports": {
-    ".": "./src/index.tsx"
+    ".": "./src/index.tsx",
+    "./color-choice": "./src/color-choice.tsx"
   },
   "dependencies": {
     "@heroui/react": "^3.2.6",

@@ -1,6 +1,5 @@
 import type { PageNumbersOptions, PositionAnchor } from '@fuckpdf/tools'
 import {
-  ColorChoice,
   Description,
   Fieldset,
   Input,
@@ -10,6 +9,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@fuckpdf/ui'
+import { ColorChoice } from '@fuckpdf/ui/color-choice'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 

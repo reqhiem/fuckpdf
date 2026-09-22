@@ -1,25 +1,14 @@
-import {
-  Button,
-  cx,
-  Dropdown,
-  Link as ExternalLink,
-  Hint,
-  Label,
-  RouterProvider,
-  ThemeToggle,
-} from '@fuckpdf/ui'
-import { ChevronDown } from 'lucide-react'
-import { useEffect, useState } from 'react'
+import { cx, Link as ExternalLink, Hint, RouterProvider, ThemeToggle } from '@fuckpdf/ui'
+import { lazy, Suspense, useEffect, useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Link, Outlet, useHref, useLocation, useNavigate } from 'react-router'
-import { groups } from './groups'
-import { icons } from './icons'
+import { ConvertTrigger, converters, navItem } from './convert-trigger'
+
+// The menu pulls React Aria's collection and overlay code, which the shell budget cannot carry.
+const ConvertMenu = lazy(() => import('./ConvertMenu'))
 
 const repo = 'https://github.com/reqhiem/fuckpdf'
 const primary = ['edit', 'merge', 'split', 'organize'] as const
-const converters = groups.flatMap((g) => (g.name === 'convert' ? [...g.half, ...g.third] : []))
-const navItem =
-  'inline-flex h-9 items-center gap-1 rounded-3xl px-3 text-sm font-medium no-underline transition-colors hover:bg-default hover:no-underline'
 
 const useRouterHref = (href: string) => {
   const resolved = useHref(href)
@@ -42,39 +31,9 @@ function PrimaryNav() {
           {t(`nav.${id}`)}
         </ExternalLink>
       ))}
-      <Dropdown>
-        <Button
-          className={cx(
-            navItem,
-            converters.some((id) => id === current) ? 'bg-default text-accent' : 'text-foreground',
-          )}
-          variant="ghost"
-        >
-          {t('groups.convert')}
-          <ChevronDown aria-hidden="true" size={14} />
-        </Button>
-        <Dropdown.Popover>
-          <Dropdown.Menu>
-            {converters.map((id) => {
-              const Icon = icons[id]
-              return (
-                <Dropdown.Item
-                  aria-current={current === id ? 'page' : undefined}
-                  href={`/${id}`}
-                  id={id}
-                  key={id}
-                  textValue={t(`tools.${id}.name`)}
-                >
-                  <Icon aria-hidden="true" className="size-4 shrink-0 text-muted" />
-                  <Label className={cx(current === id && 'text-accent')}>
-                    {t(`tools.${id}.name`)}
-                  </Label>
-                </Dropdown.Item>
-              )
-            })}
-          </Dropdown.Menu>
-        </Dropdown.Popover>
-      </Dropdown>
+      <Suspense fallback={<ConvertTrigger active={converters.some((id) => id === current)} />}>
+        <ConvertMenu current={current} />
+      </Suspense>
     </nav>
   )
 }

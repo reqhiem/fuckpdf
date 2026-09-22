@@ -1,7 +1,6 @@
 import type { WatermarkOptions } from '@fuckpdf/tools'
 import {
   Button,
-  ColorChoice,
   Description,
   Fieldset,
   Input,
@@ -14,6 +13,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@fuckpdf/ui'
+import { ColorChoice } from '@fuckpdf/ui/color-choice'
 import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'

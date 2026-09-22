@@ -4,7 +4,6 @@ import type { EditElement, EditFont } from '@fuckpdf/tools'
 import {
   Button,
   CloseButton,
-  ColorChoice,
   Description,
   Fieldset,
   IconButton,
@@ -17,6 +16,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@fuckpdf/ui'
+import { ColorChoice } from '@fuckpdf/ui/color-choice'
 import { Minus, Plus } from 'lucide-react'
 import type { ReactNode } from 'react'
 import { useMemo } from 'react'
