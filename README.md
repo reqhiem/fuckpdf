@@ -5,7 +5,7 @@
 
 **PDF tools. No upload. No account. No bullshit.**
 
-Eleven PDF tools that run entirely in your browser, on WebAssembly and Web Workers. Your
+Twelve PDF tools that run entirely in your browser, on WebAssembly and Web Workers. Your
 files are never sent anywhere, because there is nowhere to send them: no backend, no
 accounts, no queue, no analytics, no cookies, no third-party requests.
 
@@ -14,12 +14,14 @@ accounts, no queue, no analytics, no cookies, no third-party requests.
 
 <picture>
   <source media="(prefers-color-scheme: dark)" srcset="docs/screenshots/landing-dark.webp">
-  <img alt="The fuckpdf landing page: a grid of eleven PDF tools" src="docs/screenshots/landing-light.webp">
+  <img alt="The fuckpdf landing page: a grid of twelve PDF tools" src="docs/screenshots/landing-light.webp">
 </picture>
 
 | A tool page | The page grid |
 | --- | --- |
-| <img alt="A tool page: the dropped file on the left, the options panel and Run on the right" src="docs/screenshots/tool-page.webp"> | <img alt="The page grid: thumbnails with drag-to-reorder, rotate and delete" src="docs/screenshots/page-grid.webp"> |
+| <img alt="The watermark tool: a thumbnail of the dropped file, a live preview of page 1 of the result, and the options panel on the right" src="docs/screenshots/tool-page.webp"> | <img alt="The page grid: thumbnails with drag-to-reorder, rotate and delete" src="docs/screenshots/page-grid.webp"> |
+
+<img alt="The edit tool: a toolbar of shape tools above the rendered page, with page navigation below it" src="docs/screenshots/editor.webp">
 
 ## Why "nothing is uploaded" is true here, not just claimed
 
@@ -53,8 +55,12 @@ One thing this does not cover is documented below, in
 
 ## Tools
 
-All eleven ship today and are asserted byte-for-byte in a real browser by
+All twelve ship today and are asserted byte-for-byte in a real browser by
 [`e2e/tests/tools.spec.ts`](e2e/tests/tools.spec.ts).
+
+Every tool shows you the document, not a file name: a thumbnail per file, a page grid where
+the pages are the options, and a live preview that runs the real step and draws page 1 of
+what you are actually about to download.
 
 | Tool | Route | What it does | Engine |
 | --- | --- | --- | --- |
@@ -67,13 +73,15 @@ All eleven ship today and are asserted byte-for-byte in a real browser by
 | Page numbers | `/page-numbers` | Nine position anchors, first number, page range, `{n}` / `{n} of {total}` templates, font, size, colour, margin | pdf-lib |
 | Watermark | `/watermark` | Text or image, positioned or tiled, opacity, rotation, over or under the content, page range | pdf-lib |
 | Crop PDF | `/crop` | Draw the box on a page; non-destructive by default, or `flatten` to rasterise it in | pdf-lib (+ PDFium when flattening) |
+| Edit PDF | `/edit` | Add text, images, rectangles, ellipses, lines, freehand ink and highlights on a canvas; move, resize, undo; flattened on export. Existing page content is covered, never edited | pdf-lib + PDFium (page render) |
 | JPG to PDF | `/jpg-to-pdf` | JPEG or PNG in, one PDF out: A4, Letter or fit-to-image, orientation, margin, fit mode | pdf-lib |
 | PDF to JPG | `/pdf-to-jpg` | Every page as JPEG, PNG or WebP at 72 to 300 DPI, zipped | PDFium |
 
 Every tool runs with zero options touched. Options refine a result; they never gate one.
 
-Not shipped yet, and not pretended otherwise: Protect, Unlock, Sign, Redact, Forms, Edit,
-Compress, Repair, OCR. See [`.context/ROADMAP.md`](.context/ROADMAP.md).
+Not shipped yet, and not pretended otherwise: Protect, Unlock, Sign, Redact, Forms,
+Compress, Repair, OCR. Edit adds content on top of a page; editing the text already in a
+PDF is out of scope and the tool says so. See [`.context/ROADMAP.md`](.context/ROADMAP.md).
 
 ## Quick start
 

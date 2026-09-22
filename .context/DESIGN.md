@@ -118,6 +118,31 @@ transition that a headless render would never fire.
 
 `prefers-reduced-motion: reduce` collapses durations to ~0 globally in `tokens.css`.
 
+## One surface per tool
+
+A tool page shows the user's files as a strip of thumbnails, and then **exactly one**
+surface for the work itself:
+
+| Surface | Tools | Why |
+| --- | --- | --- |
+| Page grid, interactive | organize, remove-pages, extract-pages, crop | The grid *is* the options |
+| Page grid, read-only | split | Ranges are unreadable against a file name |
+| Live output preview | rotate, page-numbers, watermark, pdf-to-jpg | Form-driven; show what comes out |
+| Editor canvas | edit | The canvas is the tool |
+| Nothing but the strip | merge, jpg-to-pdf | The file order is the whole input |
+
+Never two surfaces at once. A grid *and* a preview of the same document is two answers to
+one question, and the user has to work out which one is authoritative.
+
+The live preview renders the tool's **real output**, not a CSS impression of it: it runs
+the step, debounced, and draws page 1 of the result. A hand-built preview drifts from the
+step the first time either one changes, and a preview that lies is worse than no preview.
+Above a size threshold it falls back to the input's page 1 and says so — a stale preview
+presented as live is how someone ships the wrong document.
+
+Files are thumbnails, not filenames. A row of names tells the user nothing about what they
+picked up; page 1 of each file tells them immediately whether they grabbed the right one.
+
 ## Component states
 
 Every interactive element ships default, hover, focus-visible, active, disabled, and —

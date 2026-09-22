@@ -1,7 +1,6 @@
 {
   "options": {
     "merge": {
-      "order": "File order (one name per line)",
       "ranges": "Page ranges (filename=1-5, one per line)"
     },
     "split": {

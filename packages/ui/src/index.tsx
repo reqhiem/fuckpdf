@@ -1,11 +1,4 @@
-/**
- * The design system is HeroUI v3 (Tailwind v4 + React Aria). This package is the single
- * seam: it re-exports the HeroUI primitives the app is allowed to use, and adds the two
- * things HeroUI has no equivalent for — the file dropzone and the theme toggle.
- *
- * Brand styling lives entirely in `apps/web/src/styles/tokens.css`, which remaps HeroUI's
- * semantic CSS variables. No component here overrides HeroUI's own classes.
- */
+// The single seam onto HeroUI v3. App code imports from here, never from `@heroui/react`.
 import { Button, Tooltip } from '@heroui/react'
 import { Moon, Sun, UploadCloud } from 'lucide-react'
 import type { ReactNode } from 'react'
@@ -54,6 +47,7 @@ export function cx(...values: Array<string | false | null | undefined>) {
 
 type DropzoneProps = {
   accept?: string[]
+  compact?: boolean
   disabled?: boolean
   hint: ReactNode
   label: ReactNode
@@ -61,13 +55,9 @@ type DropzoneProps = {
   onFiles: (files: File[]) => void
 }
 
-/**
- * A drop target that is also a button and also listens for paste. React Aria has no
- * file-drop primitive, so this stays hand-rolled — but it is one button, so the keyboard
- * and screen-reader path is the button's, not a re-invented one.
- */
 export function Dropzone({
   accept,
+  compact = false,
   disabled,
   hint,
   label,
@@ -91,7 +81,8 @@ export function Dropzone({
     <>
       <button
         className={cx(
-          'surface group flex min-h-64 w-full cursor-pointer flex-col items-center justify-center gap-4 border-2 border-dashed p-8 text-center transition-colors duration-200',
+          'surface group flex w-full cursor-pointer items-center justify-center border-2 border-dashed text-center transition-colors duration-200',
+          compact ? 'gap-3 p-4' : 'min-h-64 flex-col gap-4 p-8',
           dragging
             ? 'border-accent bg-accent/8'
             : 'border-[var(--border)] hover:border-accent/50 hover:bg-accent/4',
@@ -104,7 +95,6 @@ export function Dropzone({
           setDragging(true)
         }}
         onDragLeave={(event) => {
-          // Only leave when the pointer left the zone itself, not a child.
           if (!event.currentTarget.contains(event.relatedTarget as Node)) setDragging(false)
         }}
         onDragOver={(event) => event.preventDefault()}
@@ -118,28 +108,34 @@ export function Dropzone({
         <span
           aria-hidden="true"
           className={cx(
-            'flex size-14 items-center justify-center rounded-full transition-colors duration-200',
+            'flex items-center justify-center rounded-full transition-colors duration-200',
+            compact ? 'size-9' : 'size-14',
             dragging
               ? 'bg-accent text-ink'
               : 'bg-[var(--default)] text-muted group-hover:text-accent',
           )}
         >
-          <UploadCloud size={24} />
+          <UploadCloud size={compact ? 16 : 24} />
         </span>
-        <span className="block text-lg font-semibold">{label}</span>
-        <span className="block max-w-sm text-sm leading-6 text-muted">{hint}</span>
+        <span className={cx('block font-semibold', compact ? 'text-sm' : 'text-lg')}>{label}</span>
+        <span
+          className={cx(
+            'block max-w-sm leading-6 text-muted',
+            compact ? 'sr-only sm:not-sr-only sm:text-sm' : 'text-sm',
+          )}
+        >
+          {hint}
+        </span>
       </button>
       <input
         accept={accepted}
-        // Hidden from the tree as well as from view: the button above is the control, and
-        // an exposed file input shows up as a second, nameless "Choose File".
+        // Hidden from the tree too: exposed, it reads as a second nameless "Choose File".
         aria-hidden="true"
         className="sr-only"
         disabled={disabled}
         multiple={multiple}
         onChange={(event) => {
           receive(event.target.files)
-          // Let the same file be chosen twice in a row.
           event.target.value = ''
         }}
         ref={input}

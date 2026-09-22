@@ -1,12 +1,8 @@
 import type { ToolId } from '@fuckpdf/tools'
 import { type LazyExoticComponent, lazy } from 'react'
 
-/**
- * Every tool's options panel gets its tool's own options object and hands back a new one.
- * The registry below has to be uniform, so each panel narrows `value` to its own exported
- * `<Tool>Options` type internally — that single cast is the seam, and it lives inside the
- * panel rather than at every call site.
- */
+/** The registry is uniform, so each panel narrows `value` to its own options type inside
+ * itself rather than at every call site. */
 export type OptionsPanelProps = {
   value: Record<string, unknown>
   onChange: (next: Record<string, unknown>) => void
@@ -14,7 +10,7 @@ export type OptionsPanelProps = {
 
 export type OptionsPanel = LazyExoticComponent<(props: OptionsPanelProps) => React.ReactNode>
 
-/** Lazy so a tool's options code never lands in the shell bundle (NFR-5). */
+// Lazy: a tool's options code must not land in the shell bundle.
 export const optionsPanels: Record<ToolId, OptionsPanel> = {
   merge: lazy(() => import('../tools/merge/options')),
   split: lazy(() => import('../tools/split/options')),
@@ -25,6 +21,7 @@ export const optionsPanels: Record<ToolId, OptionsPanel> = {
   'page-numbers': lazy(() => import('../tools/page-numbers/options')),
   watermark: lazy(() => import('../tools/watermark/options')),
   crop: lazy(() => import('../tools/crop/options')),
+  edit: lazy(() => import('../tools/edit/options')),
   'jpg-to-pdf': lazy(() => import('../tools/jpg-to-pdf/options')),
   'pdf-to-jpg': lazy(() => import('../tools/pdf-to-jpg/options')),
 }

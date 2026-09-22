@@ -201,6 +201,10 @@
       "name": "Crop PDF",
       "description": "Trim page edges without drama."
     },
+    "edit": {
+      "name": "Edit PDF",
+      "description": "Add text, images, shapes and ink on top of the pages."
+    },
     "jpg-to-pdf": {
       "name": "JPG to PDF",
       "description": "Turn images into a PDF."

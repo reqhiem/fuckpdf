@@ -108,3 +108,28 @@ native `<select>`, so Playwright's `selectOption()` no longer drives it. The fou
 tests go through a `chooseOption` helper in `e2e/fixtures/ui.ts` that opens the trigger by
 label and picks the option by its visible name. That is a stricter assertion than before,
 not a weaker one: it only passes if the control is reachable by accessible name.
+
+## D9 — The preview is the tool's own output, and Zustand is only the editor's
+
+**Decided.** Two things the visual layer could have been built with, and were not.
+
+**A live preview runs the real step.** Page numbers, watermark and crop all want to show
+the user what they are about to get. The obvious way is to re-draw each tool's geometry in
+CSS on top of a thumbnail. That is a second implementation of every tool, and it starts
+drifting from the first one the day either changes — a preview that quietly lies is worse
+than no preview at all. Instead `LivePreview` runs `module.run` on the real input,
+debounced and cancellable, and renders page 1 of the actual output. One component covers
+every form-driven tool, and it cannot disagree with the step because it *is* the step.
+
+Costs accepted: a full parse and write per option change. Bounded by a 15 MB threshold,
+above which the preview shows page 1 of the input and says so in the caption. Naming which
+document is on screen is not optional — a stale preview presented as live is how someone
+ships the wrong file.
+
+**Zustand earns its place in the editor and nowhere else.** It has been a dependency since
+M0 and was never used; `ToolPage` runs on plain `useState` and still does. The editor is
+the first case that cannot: its canvas and its inspector are two separately lazy-loaded
+trees in different regions of the page, so they cannot share selection state through props.
+A module-level store is what makes that work. Drag state deliberately stays out of it —
+in-flight geometry lives in local state and lands on pointerup, because a store write per
+`pointermove` re-renders the element list on every frame.

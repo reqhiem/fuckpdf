@@ -1,8 +1,3 @@
-/**
- * One page in the grid: a worker-rendered thumbnail, its per-page actions, and the crop
- * rectangle. The only thing a cell allocates is its object URL, and the store releases it
- * when the cell scrolls away or unmounts (PRD NFR-3).
- */
 import { useSortable } from '@dnd-kit/sortable'
 import { cx, Skeleton } from '@fuckpdf/ui'
 import {
@@ -24,7 +19,6 @@ import { type CropRect, type DragRect, toPdfPoints } from './crop'
 import type { PageGridCapabilities, PageRef } from './types'
 import type { ThumbnailStore } from './use-thumbnails'
 
-/** Under this many pixels, a pointer drag on a thumbnail was a click, not a crop. */
 const DRAG_THRESHOLD = 4
 
 export type SelectModifiers = { shiftKey: boolean; metaKey: boolean; ctrlKey: boolean }
@@ -36,7 +30,6 @@ export type PageCellProps = {
   capabilities: Required<PageGridCapabilities>
   store: ThumbnailStore
   cropEnabled: boolean
-  /** True when this page is the one currently holding the grid's crop rectangle. */
   cropActive: boolean
   onSelect: (id: string, modifiers: SelectModifiers) => void
   onRotate: (id: string) => void
@@ -78,8 +71,7 @@ export function PageCell({
   const snapshot = useCallback(() => store.get(page.sourceIndex), [store, page.sourceIndex])
   const thumbnail = useSyncExternalStore(subscribe, snapshot)
 
-  // Render on approach, release on departure: a 300-page document holds a screenful of
-  // decoded pages, not 300.
+  // Render on approach, release on departure: 300 pages must not hold 300 renders.
   const cell = useRef<HTMLLIElement | null>(null)
   const [near, setNear] = useState(false)
   useEffect(() => {
@@ -113,20 +105,19 @@ export function PageCell({
   const image = useRef<HTMLImageElement | null>(null)
   const dragged = useRef(false)
   const [drag, setDrag] = useState<DragRect | null>(null)
-  // Where the painted image sits inside the square cell, so the overlay lands on it.
   const [inset, setInset] = useState<Point>({ x: 0, y: 0 })
   useEffect(() => {
     if (!cropActive) setDrag(null)
   }, [cropActive])
 
-  // A crop gesture runs on window listeners rather than pointer capture: the rectangle
-  // re-renders this cell on every move, and a re-render drops an element's capture.
+  // Window listeners, not pointer capture: the rectangle re-renders this cell on every
+  // move, and a re-render drops an element's capture.
   const stopGesture = useRef<(() => void) | null>(null)
   useEffect(() => () => stopGesture.current?.(), [])
 
   const canCrop = cropEnabled && !blank && !!thumbnail?.size
 
-  const startCrop = (event: ReactPointerEvent<HTMLButtonElement>) => {
+  const startCrop = (event: ReactPointerEvent<HTMLElement>) => {
     const box = image.current?.getBoundingClientRect()
     if (!canCrop || event.button !== 0 || !box) return
     const frame = event.currentTarget.getBoundingClientRect()
@@ -168,9 +159,9 @@ export function PageCell({
     window.addEventListener('pointercancel', detach)
   }
 
-  const click = (event: MouseEvent<HTMLButtonElement>) => {
+  const click = (event: MouseEvent<HTMLElement>) => {
     if (dragged.current) {
-      // The pointerup that finished a crop drag also fires a click. Not a selection.
+      // The pointerup that ended a crop drag also fires a click. Not a selection.
       dragged.current = false
       return
     }
@@ -186,6 +177,15 @@ export function PageCell({
   const action =
     'inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink dark:hover:bg-paper/10 dark:hover:text-paper'
 
+  const interactive =
+    cropEnabled ||
+    capabilities.select ||
+    capabilities.reorder ||
+    capabilities.rotate ||
+    capabilities.remove ||
+    capabilities.duplicate
+  const Frame = interactive ? 'button' : 'div'
+
   return (
     <li
       className={cx(
@@ -199,12 +199,12 @@ export function PageCell({
       }}
       style={style}
     >
-      <button
+      <Frame
         aria-pressed={capabilities.select ? selected : undefined}
         className="relative flex aspect-square w-full touch-none select-none items-center justify-center overflow-hidden rounded-xl bg-ink/5 dark:bg-paper/5"
-        onClick={click}
-        onPointerDown={startCrop}
-        type="button"
+        onClick={interactive ? click : undefined}
+        onPointerDown={interactive ? startCrop : undefined}
+        type={interactive ? 'button' : undefined}
       >
         <Thumbnail
           blank={blank}
@@ -227,10 +227,10 @@ export function PageCell({
             }}
           />
         ) : null}
-      </button>
+      </Frame>
 
       {capabilities.select && selected ? (
-        // The ring alone would make selection a colour-only signal.
+        // Without the tick, selection would be a colour-only signal.
         <span
           aria-hidden="true"
           className="absolute top-3 right-3 z-10 flex size-6 items-center justify-center rounded-full bg-accent text-ink shadow"
@@ -316,12 +316,7 @@ type ThumbnailProps = {
   url: string | undefined
 }
 
-/**
- * White is reserved for actual page stock (DESIGN.md), so the sheet carries its own
- * background, hairline and shadow rather than inheriting the cell's well. That is what
- * makes paper read as paper in both themes — and why the text on it is ink, never
- * `text-muted`, whose dark-mode value fails contrast on a light ground.
- */
+/** White is page stock (DESIGN.md): text on the sheet is ink, `text-muted` fails there. */
 const SHEET = 'bg-white shadow-[0_1px_3px_rgb(0_0_0/0.18)] ring-1 ring-ink/15'
 
 function Thumbnail({ blank, error, label, number, ref, rotation, url }: ThumbnailProps) {
@@ -343,8 +338,7 @@ function Thumbnail({ blank, error, label, number, ref, rotation, url }: Thumbnai
       <img
         alt={label}
         className={cx(SHEET, 'max-h-full max-w-full object-contain')}
-        // Without this the browser starts a native image drag, which cancels the pointer
-        // gesture the crop rectangle is riding on.
+        // Otherwise a native image drag cancels the crop gesture.
         draggable={false}
         ref={ref}
         src={url}
@@ -358,8 +352,7 @@ function Thumbnail({ blank, error, label, number, ref, rotation, url }: Thumbnai
         <span className="text-xs">{t('pageGrid.failed')}</span>
       </span>
     )
-  // A skeleton in the shape of a page, not a spinner — but the cell is a button, and a
-  // button with no accessible name is a defect, so the label stays for screen readers.
+  // The cell may be a button, so the label stays even while there is nothing to show.
   return (
     <>
       <Skeleton className="h-full w-[72%] rounded-sm" />

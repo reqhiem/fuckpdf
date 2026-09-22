@@ -1,13 +1,13 @@
 import i18n from 'i18next'
 import { initReactI18next } from 'react-i18next'
+import enEdit from './locales/en.edit.json'
 import en from './locales/en.json'
-// Per-tool option labels live in their own catalog so the tool panels and the shell can be
-// edited without fighting over one file.
 import enOptions from './locales/en.options.json'
+import enPreview from './locales/en.preview.json'
 import enTool from './locales/en.tool.json'
 
 void i18n.use(initReactI18next).init({
-  resources: { en: { translation: { ...en, ...enOptions, ...enTool } } },
+  resources: { en: { translation: { ...en, ...enOptions, ...enTool, ...enPreview, ...enEdit } } },
   fallbackLng: 'en',
   lng: 'en',
   interpolation: { escapeValue: false },

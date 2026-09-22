@@ -1,12 +1,5 @@
-/**
- * One test per M1 tool, driven through the real UI and asserted against the bytes the
- * browser actually downloads.
- *
- * Unit tests already cover the steps, so this suite deliberately asserts nothing a step
- * test could see. It exists for the gap between them: routing, the options panel wiring,
- * the page grid, the worker-backed engine and the download path. A tool passes here only
- * when the downloaded file is one a correct run could have produced.
- */
+// One test per tool, driven through the real UI and asserted against the downloaded
+// bytes. Unit tests cover the steps; this covers everything between them.
 import { expect, test } from '@playwright/test'
 import { createPng, MAGIC, unzip } from '../fixtures/bytes'
 import {
@@ -103,10 +96,8 @@ test('organize writes the grid order, and a rotated page keeps its rotation', as
   await upload(page, [pdfFile('six.pdf', await sixPagePdf())])
   await waitForGrid(page, 6)
 
-  // Rotate first, then drag: dnd-kit swallows the click that ends a drag (it suppresses it
-  // for ~50ms so a drop is never also a click), and React would never see a rotate issued
-  // inside that window. Doing it in this order also asserts more — the rotation has to
-  // survive the reorder and land on the page that moved.
+  // Rotate before dragging: dnd-kit suppresses clicks for ~50ms after a drop, so a rotate
+  // issued in that window never reaches React.
   await page.getByRole('button', { name: 'Rotate page 2' }).click()
   await expect(page.getByRole('img', { name: 'Page 2 of 6' })).toHaveCSS('rotate', '90deg')
 
@@ -117,21 +108,17 @@ test('organize writes the grid order, and a rotated page keeps its rotation', as
 
   await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
   await page.mouse.down()
-  // dnd-kit's pointer sensor ignores the first 4px, so nudge before travelling.
+  // The pointer sensor ignores the first 4px, so nudge before travelling.
   await page.mouse.move(from.x + from.width / 2 + 12, from.y + from.height / 2, { steps: 4 })
   await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 20 })
   await page.mouse.up()
 
-  // dnd-kit announces the drop in a live region; that is the grid telling us it reordered.
   await expect(page.getByRole('status')).toContainText('Page 1 dropped at position 3.')
-  // Its pointer sensor also keeps a capture-phase `click` guard on the document for 50ms
-  // after a drop, so a drag is never also a click. React sees nothing while it is up, so
-  // the next click has to wait it out — including the one on Run.
+  // Wait out the click guard described above before pressing Run.
   await page.waitForTimeout(150)
 
   const output = await runAndDownload(page)
 
-  // Page 1 moved to third place, and the rotated page (102pt wide) is now first.
   expect(await pageWidths(output)).toEqual([102, 103, 101, 104, 105, 106])
   expect(await pageRotations(output)).toEqual([90, 0, 0, 0, 0, 0])
 })
@@ -215,4 +202,72 @@ test('pdf-to-jpg exports one real PNG per page', async ({ page }) => {
   for (const [name, bytes] of Object.entries(bundle)) {
     expect([...bytes.subarray(0, 4)], `${name} is not a PNG`).toEqual(MAGIC.png)
   }
+})
+
+test('edit draws a rectangle where the editor put it', async ({ page }) => {
+  await openTool(page, 'edit', 'Edit PDF')
+  await upload(page, [pdfFile('one.pdf', await createPagedPdf([400]))])
+
+  const canvas = page.getByRole('application', { name: 'Page canvas' })
+  await expect(canvas).toBeVisible({ timeout: 60_000 })
+  await chooseToggle(page, 'Tool', 'Rectangle')
+
+  // page.mouse works in viewport coordinates, and the canvas sits well below the fold.
+  await canvas.scrollIntoViewIfNeeded()
+  const box = await canvas.boundingBox()
+  if (!box) throw new Error('the editor canvas has no layout box')
+  await page.mouse.move(box.x + 40, box.y + 40)
+  await page.mouse.down()
+  await page.mouse.move(box.x + 160, box.y + 140, { steps: 10 })
+  await page.mouse.up()
+
+  // Typed rather than dragged, so the assertion is exact whatever the canvas is scaled to.
+  // The editor measures y from the top of the page; pdf-lib does not.
+  await setNumber(page, 'X (pt)', '50')
+  await setNumber(page, 'Y (pt)', '60')
+  await setNumber(page, 'Width (pt)', '120')
+  await setNumber(page, 'Height (pt)', '100')
+
+  const output = await runAndDownload(page)
+  const content = await pageContent(output, 0)
+
+  expect(await pageCount(output)).toBe(1)
+  expect(content).toContain('1 0 0 1 50 632 cm')
+  expect(content).toContain('120 100 l')
+  expect(content).toContain('PAGE-1 Tj')
+})
+
+test('merge follows the order the file strip was dragged into', async ({ page }) => {
+  await openTool(page, 'merge', 'Merge PDF')
+  await upload(page, [
+    pdfFile('alpha.pdf', await createPagedPdf([201, 202])),
+    pdfFile('beta.pdf', await createPagedPdf([301, 302])),
+  ])
+
+  const grip = (name: string) => page.getByRole('button', { name: new RegExp(`^Move ${name}`) })
+  const from = await grip('beta\\.pdf').boundingBox()
+  const to = await grip('alpha\\.pdf').boundingBox()
+  if (!from || !to) throw new Error('the file strip drag handles have no layout box')
+
+  await page.mouse.move(from.x + from.width / 2, from.y + from.height / 2)
+  await page.mouse.down()
+  await page.mouse.move(from.x + from.width / 2 - 12, from.y + from.height / 2, { steps: 4 })
+  await page.mouse.move(to.x + to.width / 2, to.y + to.height / 2, { steps: 20 })
+  await page.mouse.up()
+
+  await expect(page.getByRole('status')).toContainText('beta.pdf dropped at position 1.')
+  await page.waitForTimeout(150)
+
+  const output = await runAndDownload(page)
+
+  expect(await pageWidths(output)).toEqual([301, 302, 201, 202])
+})
+
+test('watermark previews its own output rather than the input', async ({ page }) => {
+  await openTool(page, 'watermark', 'Watermark')
+  await upload(page, [pdfFile('two.pdf', await createPagedPdf([200, 201]))])
+
+  await expect(page.getByRole('img', { name: 'The result, page 1 of 2' })).toBeVisible({
+    timeout: 60_000,
+  })
 })

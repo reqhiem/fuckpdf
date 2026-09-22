@@ -1,4 +1,5 @@
 import {
+  type EditElement,
   loadTool,
   type Output,
   type PdfInput,
@@ -21,9 +22,11 @@ import {
   TextField,
 } from '@fuckpdf/ui'
 import { zipSync } from 'fflate'
-import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router'
+import { FileStrip } from '../components/file-strip'
+import { LivePreview } from '../components/live-preview'
 import { PageGrid, type PageGridCrop, type PageRef } from '../components/page-grid'
 import { formatBytes, formatTypes } from '../lib/format'
 import { Landing } from '../shell/Landing'
@@ -32,20 +35,23 @@ import { optionsPanels } from './options-panel'
 import {
   GRID_ONLY_TOOLS,
   GRID_TOOLS,
+  PREVIEW_TOOLS,
+  REORDERABLE_TOOLS,
   toOrganizeOperations,
   toPageRangeString,
 } from './page-selection'
 
+const PdfEditor = lazy(() => import('../components/pdf-editor'))
+
 const SOFT_LIMIT = 100 * 1024 * 1024
 const HARD_LIMIT = 500 * 1024 * 1024
 
-/** The stages the steps actually report. Anything else falls back to the generic label. */
 const STAGES = new Set(['load', 'file', 'page', 'image', 'done'])
 
 type RunError = { message: string; detail: string }
 
 export function ToolPage() {
-  // The routes are literal slugs (`/merge`, not `/:id`), so the tool is the path itself.
+  // The routes are literal slugs, so the tool is the path itself.
   const { pathname } = useLocation()
   const { t } = useTranslation()
   const slug = pathname.replace(/^\/+|\/+$/g, '')
@@ -66,6 +72,7 @@ export function ToolPage() {
   const [pages, setPages] = useState<PageRef[]>([])
   const [selected, setSelected] = useState<ReadonlySet<string>>(new Set())
   const [crop, setCrop] = useState<PageGridCrop | null>(null)
+  const [elements, setElements] = useState<EditElement[]>([])
   const controller = useRef<AbortController | null>(null)
 
   useEffect(() => {
@@ -82,10 +89,11 @@ export function ToolPage() {
   }, [toolId])
 
   const gridCapabilities = toolId ? GRID_TOOLS[toolId] : undefined
+  const needsBytes = !!gridCapabilities || toolId === 'edit'
 
   useEffect(() => {
     const first = files[0]
-    if (!gridCapabilities || !first) {
+    if (!needsBytes || !first) {
       setGridBytes(null)
       setPages([])
       return
@@ -95,6 +103,7 @@ export function ToolPage() {
       if (!live) return
       const bytes = new Uint8Array(buffer)
       setGridBytes(bytes)
+      if (!gridCapabilities) return
       const doc = await engine.open(bytes)
       try {
         setPages(
@@ -112,7 +121,7 @@ export function ToolPage() {
     return () => {
       live = false
     }
-  }, [files, gridCapabilities])
+  }, [files, gridCapabilities, needsBytes])
 
   const totalIn = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files])
   const totalOut = useMemo(
@@ -128,7 +137,7 @@ export function ToolPage() {
   const select = (next: File[]) => {
     const all = [...files, ...next].slice(0, maxFiles)
     const bytes = all.reduce((sum, file) => sum + file.size, 0)
-    // deviceMemory is Chromium-only; absent means "assume it is fine" rather than "block".
+    // deviceMemory is Chromium-only; absent means assume it is fine, not block.
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
     if (bytes > HARD_LIMIT || (memory !== undefined && memory <= 2 && bytes > SOFT_LIMIT)) {
       setWarning(t('tool.limitHard'))
@@ -174,7 +183,6 @@ export function ToolPage() {
         setProgress(null)
         return
       }
-      // A ToolError carries its own copyable detail; anything else only has a stack.
       const detail =
         'detail' in issue && typeof issue.detail === 'string' ? issue.detail : issue.stack
       setError({ message: issue.message, detail: detail ?? issue.name })
@@ -185,12 +193,13 @@ export function ToolPage() {
     }
   }
 
-  // The four grid tools take their real options from the grid, not from the form.
+  // Grid and editor tools take their real options from the surface, not from the form.
   const gridOptions = (): Record<string, unknown> => {
     if (toolId === 'organize') return { operations: toOrganizeOperations(pages) }
     if (toolId === 'remove-pages' || toolId === 'extract-pages')
       return { pages: toPageRangeString(pages, selected) }
     if (toolId === 'crop' && crop) return { box: crop.rect }
+    if (toolId === 'edit') return { elements }
     return {}
   }
 
@@ -223,6 +232,7 @@ export function ToolPage() {
     setWarning('')
     setSelected(new Set())
     setCrop(null)
+    setElements([])
   }
 
   const copyDetail = () => {
@@ -241,9 +251,8 @@ export function ToolPage() {
       ? t(`toolPage.stage.${progress.stage}`)
       : t('tool.progress')
 
-  // Grid tools need the width for page thumbnails. A form-driven tool does not, and giving
-  // it the full column just leaves a wide empty gutter beside the options.
-  const column = gridCapabilities ? 'max-w-6xl' : 'max-w-3xl'
+  const column = toolId === 'edit' ? 'max-w-7xl' : 'max-w-6xl'
+  const optionsPanel = !GRID_ONLY_TOOLS.has(toolId)
 
   return (
     <div className={cx('mx-auto px-6 py-12', column)}>
@@ -316,8 +325,19 @@ export function ToolPage() {
       ) : null}
 
       {files.length ? (
-        <div className="mt-10 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+        <div
+          className={cx(
+            'mt-10 grid items-start gap-6',
+            optionsPanel && 'lg:grid-cols-[minmax(0,1fr)_22rem]',
+          )}
+        >
           <div className="min-w-0 space-y-5">
+            <FileStrip
+              files={files}
+              onChange={setFiles}
+              reorderable={REORDERABLE_TOOLS.has(toolId)}
+            />
+
             {gridCapabilities && gridBytes ? (
               <PageGrid
                 bytes={gridBytes}
@@ -330,26 +350,20 @@ export function ToolPage() {
               />
             ) : null}
 
-            <Card>
-              <Card.Header>
-                <Card.Title className="text-base font-semibold">{t('toolPage.inputs')}</Card.Title>
-              </Card.Header>
-              <Card.Content className="divide-y divide-[var(--separator)]">
-                {files.map((file) => (
-                  <div
-                    className="flex items-center justify-between gap-4 py-2"
-                    key={`${file.name}-${file.lastModified}`}
-                  >
-                    <span className="truncate">{file.name}</span>
-                    <span className="measure text-xs text-muted">{formatBytes(file.size)}</span>
-                  </div>
-                ))}
-              </Card.Content>
-            </Card>
+            {toolId === 'edit' && gridBytes ? (
+              <Suspense fallback={<Skeleton className="h-[32rem] rounded-[var(--radius)]" />}>
+                <PdfEditor bytes={gridBytes} onChange={setElements} />
+              </Suspense>
+            ) : null}
+
+            {PREVIEW_TOOLS.has(toolId) && files[0] ? (
+              <LivePreview file={files[0]} module={module} options={options} />
+            ) : null}
 
             {files.length < maxFiles ? (
               <Dropzone
                 accept={module?.accept ?? ['application/pdf']}
+                compact
                 hint={t('toolPage.addFilesHint')}
                 label={t('toolPage.addFiles')}
                 multiple
@@ -360,10 +374,13 @@ export function ToolPage() {
             {warning ? <p className="text-sm text-danger">{warning}</p> : null}
           </div>
 
-          {/* The options scroll; the action does not. DESIGN.md: a sticky action bar gets
-              its own row and its own background, and never floats over an input. */}
-          <aside className="flex flex-col gap-5 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)]">
-            {GRID_ONLY_TOOLS.has(toolId) ? null : (
+          <aside
+            className={cx(
+              'flex flex-col gap-5',
+              optionsPanel && 'lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)]',
+            )}
+          >
+            {optionsPanel ? (
               <Card className="lg:min-h-0 lg:overflow-y-auto">
                 <Card.Header>
                   <Card.Title className="text-base font-semibold">{t('tool.options')}</Card.Title>
@@ -374,7 +391,7 @@ export function ToolPage() {
                   </Suspense>
                 </Card.Content>
               </Card>
-            )}
+            ) : null}
 
             <Card className="shrink-0">
               {running ? (
@@ -434,7 +451,6 @@ export function ToolPage() {
         </div>
       ) : (
         <section className="mt-10">
-          {/* The drafting grid shows up where the user is about to put something down. */}
           <div className="hero-grid grid-fade rounded-[var(--radius)]">
             <Dropzone
               accept={module?.accept ?? ['application/pdf']}

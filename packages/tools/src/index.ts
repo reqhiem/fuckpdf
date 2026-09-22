@@ -1,6 +1,6 @@
-// Option types only. The step implementations stay behind `loadTool`, so importing an
-// options type here never pulls a tool's code into the shell bundle.
+// Option types only: a value export here would pull a tool's code into the shell bundle.
 export type { CropBox, CropOptions } from './crop'
+export * from './edit-types'
 export type { ExtractPagesOptions } from './extract-pages'
 export type { JpgToPdfOptions } from './jpg-to-pdf'
 export type { MergeOptions } from './merge'

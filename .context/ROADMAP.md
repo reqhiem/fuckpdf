@@ -7,8 +7,9 @@ it ships.
 |---|---|---|
 | **M0 Shell** | Vite/React/Tailwind scaffold, tokens, landing, tool page template, dropzone, worker RPC, PDFium thumbnail rendering, Cloudflare deploy with headers, CSP, zero-egress E2E test | **DONE** |
 | **M1 Structural tools** | Merge, Split, Remove, Extract, Organize, Rotate, Page numbers, Watermark, Crop, JPG→PDF, PDF→JPG | **DONE**, all eleven byte-verified in a real browser |
+| **Document surfaces** | A thumbnail per input file with drag-to-reorder, the page grid on every single-file tool, and a live preview that runs the real step | **DONE** |
 | **Design system** | HeroUI v3 (Tailwind v4 + React Aria) behind the `packages/ui` seam, brand tokens remapped in `tokens.css` | **IN PROGRESS** |
-| **M2 Security & forms** | Protect, Unlock, Sign, Redact (rasterizing), Forms fill, Edit (overlays) | **PLANNED**, blocked, see below |
+| **M2 Security & forms** | Protect, Unlock, Sign, Redact (rasterizing), Forms fill, Edit (overlays) | **Edit DONE**; the rest **PLANNED**, blocked, see below |
 | **M3 Optimize** | Compress, Repair, OCR; Ghostscript gated on D1 | **PLANNED** |
 | **M4 v1 launch** | Offline SW, privacy page, licenses page, a11y pass, i18n extraction, copy pass | **PLANNED** |
 | **M5 v1.5** | Compare, Forms detect, PDF→Markdown/Word/PowerPoint (lossy badge), Workflows | **PLANNED** |
@@ -34,7 +35,10 @@ imports from `@fuckpdf/ui`, never `@heroui/react`. Binding rules are in
 [DESIGN.md](./DESIGN.md). Done when the gate is green and the E2E accessible-name
 assertions still pass.
 
-**2. Pick a qpdf-wasm package. This blocks M2.** Protect and Unlock need encryption, and
+**2. Pick a qpdf-wasm package. This blocks the rest of M2.** Edit shipped ahead of it,
+which is the reordering option §2 below already suggested: it needs no new engine.
+
+ Protect and Unlock need encryption, and
 neither npm candidate inspires confidence: `qpdf-wasm` 0.1.0 and `@jspawn/qpdf-wasm` 0.0.2
 both look unmaintained, as PRD §4.2 already warned. Options, none yet chosen: adopt one and
 pin it, build qpdf to wasm ourselves and self-host the artifact, or reorder M2 so the tools

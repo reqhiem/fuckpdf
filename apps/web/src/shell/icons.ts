@@ -8,6 +8,7 @@ import {
   Hash,
   Images,
   LayoutGrid,
+  PencilLine,
   RotateCw,
   Scissors,
   Stamp,
@@ -16,7 +17,6 @@ import type { ComponentType, SVGProps } from 'react'
 
 export type ToolIcon = ComponentType<SVGProps<SVGSVGElement> & { size?: number | string }>
 
-/** One distinct lucide icon per tool. Two tools never share one. */
 export const icons: Record<ToolId, ToolIcon> = {
   merge: FilePlus2,
   split: Scissors,
@@ -27,6 +27,7 @@ export const icons: Record<ToolId, ToolIcon> = {
   'page-numbers': Hash,
   watermark: Stamp,
   crop: Crop,
+  edit: PencilLine,
   'jpg-to-pdf': FileImage,
   'pdf-to-jpg': Images,
 }

@@ -1,0 +1,27 @@
+{
+  "preview": {
+    "files": "Files",
+    "loading": "Rendering {{name}}",
+    "pdfAlt": "{{name}}, page 1 of {{total}}",
+    "imageAlt": "{{name}}",
+    "remove": "Remove {{name}}",
+    "reorder": "Move {{name}}, position {{number}} of {{total}}",
+    "dnd": {
+      "instructions": "Press space or enter to pick up a file. Use the arrow keys to move it, space or enter to drop it, and escape to cancel.",
+      "picked": "Picked up {{name}}.",
+      "moved": "{{name}} is now over position {{over}}.",
+      "dropped": "{{name}} dropped at position {{over}}.",
+      "cancelled": "{{name}} was put back."
+    },
+    "rendering": "Drawing the preview.",
+    "refreshing": "Updating",
+    "none": "Nothing to preview for this file.",
+    "resultAlt": "The result, page 1 of {{total}}",
+    "resultImageAlt": "The result",
+    "note": {
+      "live": "The result, as it stands.",
+      "static": "The original file. Live preview is off at this size — run it to see the result.",
+      "fallback": "The original file. This result cannot be previewed here."
+    }
+  }
+}
