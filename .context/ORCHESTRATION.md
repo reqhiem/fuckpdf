@@ -60,3 +60,20 @@ The coordinator kept `e2e/`, root config, and the token bridge. That mattered: H
 `Select` is a React Aria listbox, so Playwright's `selectOption` stops working on it, and
 the four affected tests were fixed on the coordinator's side rather than by letting a
 worker edit the suite that grades it.
+
+### Wave 3 — tool page layout, editor workspace, tooltips
+
+Same shape as wave 2: four in-session subagents on disjoint file sets, contract frozen by
+the coordinator first (`packages/ui` gained `Hint` and `IconButton`; the two-column tool
+page and the editor's "owns its height" rule were written into the prompts).
+
+| Agent | Owns | Task |
+|---|---|---|
+| `toolpage` | `ToolPage.tsx`, `file-strip/**`, `live-preview/**`, `en.tool.json`, `en.preview.json` | Surface + sticky sidebar, result in the sidebar |
+| `editor` | `pdf-editor/**`, `tools/edit`, `en.edit.json` | Viewport-tall workspace, zoom, inspector empty state, HeroUI colour fields |
+| `grid` | `page-grid/**`, other `tools/*/options.tsx`, `en.options.json` | Tooltips, paper look, density, options panel audit |
+| `shell` | `shell/**`, `en.json` | GitHub link, `max-w-7xl` everywhere |
+
+Lesson: a named Agent launch that reports a tmux/Orca pane error may still have started.
+One did, and two writers interleaved edits in the grid's files until the stray process was
+killed. After a launch error, check `ps` for `--agent-name` before relaunching.

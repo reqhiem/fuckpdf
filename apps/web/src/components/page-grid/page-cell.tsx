@@ -1,5 +1,5 @@
 import { useSortable } from '@dnd-kit/sortable'
-import { cx, Skeleton } from '@fuckpdf/ui'
+import { cx, IconButton, Skeleton } from '@fuckpdf/ui'
 import {
   Check,
   Copy,
@@ -174,8 +174,7 @@ export function PageCell({
   }
 
   const label = t('pageGrid.page', { number: page.number, total })
-  const action =
-    'inline-flex size-9 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink dark:hover:bg-paper/10 dark:hover:text-paper'
+  const { 'aria-pressed': _pressed, ...grip } = sortable.attributes
 
   const interactive =
     cropEnabled ||
@@ -188,11 +187,7 @@ export function PageCell({
 
   return (
     <li
-      className={cx(
-        'surface relative p-2',
-        selected && 'ring-2 ring-accent',
-        sortable.isDragging && 'z-10 opacity-80',
-      )}
+      className={cx('relative', sortable.isDragging && 'z-10 opacity-80')}
       ref={(node) => {
         cell.current = node
         sortable.setNodeRef(node)
@@ -201,7 +196,11 @@ export function PageCell({
     >
       <Frame
         aria-pressed={capabilities.select ? selected : undefined}
-        className="relative flex aspect-square w-full touch-none select-none items-center justify-center overflow-hidden rounded-xl bg-ink/5 dark:bg-paper/5"
+        className={cx(
+          'group relative flex aspect-[3/4] w-full touch-none select-none items-center justify-center rounded-lg outline-none focus-visible:ring-2 focus-visible:ring-accent',
+          (capabilities.select || canCrop) && 'cursor-pointer',
+          canCrop && 'cursor-crosshair',
+        )}
         onClick={interactive ? click : undefined}
         onPointerDown={interactive ? startCrop : undefined}
         type={interactive ? 'button' : undefined}
@@ -213,6 +212,7 @@ export function PageCell({
           number={page.number}
           ref={image}
           rotation={page.rotation}
+          selected={capabilities.select && selected}
           url={thumbnail?.url}
         />
         {drag ? (
@@ -229,77 +229,70 @@ export function PageCell({
         ) : null}
       </Frame>
 
-      {capabilities.select && selected ? (
-        // Without the tick, selection would be a colour-only signal.
+      <div className="mt-1 flex h-8 items-center">
         <span
-          aria-hidden="true"
-          className="absolute top-3 right-3 z-10 flex size-6 items-center justify-center rounded-full bg-accent text-ink shadow"
+          className={cx(
+            'measure mr-auto flex items-center gap-1 pl-1 text-xs',
+            selected && capabilities.select ? 'font-semibold text-foreground' : 'text-muted',
+          )}
         >
-          <Check size={14} strokeWidth={3} />
+          {/* Without the tick, selection would be a colour-only signal. */}
+          {capabilities.select && selected ? (
+            <Check aria-hidden="true" size={14} strokeWidth={3} />
+          ) : null}
+          {page.number}
         </span>
-      ) : null}
-
-      <div className="mt-2 flex items-center gap-1">
-        <span className="mr-auto pl-1 font-mono text-xs text-muted">{page.number}</span>
         {capabilities.reorder ? (
-          <button
-            aria-label={t('pageGrid.reorder', { number: page.number })}
-            className={cx(action, 'cursor-grab')}
+          <IconButton
+            className="cursor-grab"
+            label={t('pageGrid.reorder', { number: page.number })}
             ref={sortable.setActivatorNodeRef}
-            type="button"
-            {...sortable.attributes}
+            {...grip}
             {...sortable.listeners}
           >
             <GripVertical aria-hidden="true" size={16} />
-          </button>
+          </IconButton>
         ) : null}
         {capabilities.rotate ? (
-          <button
-            aria-label={t('pageGrid.rotate', { number: page.number })}
-            className={action}
-            onClick={() => onRotate(page.id)}
-            type="button"
+          <IconButton
+            label={t('pageGrid.rotate', { number: page.number })}
+            onPress={() => onRotate(page.id)}
           >
             <RotateCw aria-hidden="true" size={16} />
-          </button>
+          </IconButton>
         ) : null}
         {capabilities.duplicate ? (
-          <button
-            aria-label={t('pageGrid.duplicate', { number: page.number })}
-            className={action}
-            onClick={() => onDuplicate(page.id)}
-            type="button"
+          <IconButton
+            label={t('pageGrid.duplicate', { number: page.number })}
+            onPress={() => onDuplicate(page.id)}
           >
             <Copy aria-hidden="true" size={16} />
-          </button>
+          </IconButton>
         ) : null}
         {capabilities.remove ? (
-          <button
-            aria-label={t('pageGrid.remove', { number: page.number })}
-            className={cx(action, 'hover:text-danger')}
-            onClick={() => onRemove(page.id)}
-            type="button"
+          <IconButton
+            className="hover:text-danger"
+            label={t('pageGrid.remove', { number: page.number })}
+            onPress={() => onRemove(page.id)}
           >
             <Trash2 aria-hidden="true" size={16} />
-          </button>
+          </IconButton>
         ) : null}
       </div>
 
       {cropActive ? (
-        <div className="mt-1 flex items-center gap-1 pl-1 text-muted">
+        <div className="flex items-center gap-1 pl-1 text-muted">
           <CropIcon aria-hidden="true" size={14} />
-          <span className="mr-auto text-[0.6875rem]">{t('pageGrid.cropped')}</span>
-          <button
-            aria-label={t('pageGrid.cropClear')}
-            className={cx(action, 'size-7')}
-            onClick={() => {
+          <span className="mr-auto text-xs">{t('pageGrid.cropped')}</span>
+          <IconButton
+            label={t('pageGrid.cropClear')}
+            onPress={() => {
               setDrag(null)
               onCrop(page.id, null)
             }}
-            type="button"
           >
             <X aria-hidden="true" size={14} />
-          </button>
+          </IconButton>
         </div>
       ) : null}
     </li>
@@ -313,20 +306,24 @@ type ThumbnailProps = {
   number: number
   ref: Ref<HTMLImageElement>
   rotation: number
+  selected: boolean
   url: string | undefined
 }
 
 /** White is page stock (DESIGN.md): text on the sheet is ink, `text-muted` fails there. */
-const SHEET = 'bg-white shadow-[0_1px_3px_rgb(0_0_0/0.18)] ring-1 ring-ink/15'
+const SHEET =
+  'bg-white shadow-[0_1px_3px_rgb(0_0_0/0.18)] transition-shadow duration-150 group-hover:shadow-[0_4px_12px_rgb(0_0_0/0.18)]'
+const PICKED = 'ring-2 ring-accent ring-offset-2 ring-offset-[var(--background)]'
 
-function Thumbnail({ blank, error, label, number, ref, rotation, url }: ThumbnailProps) {
+function Thumbnail({ blank, error, label, number, ref, rotation, selected, url }: ThumbnailProps) {
   const { t } = useTranslation()
+  const sheet = cx(SHEET, selected ? PICKED : 'ring-1 ring-ink/15')
   if (blank)
     return (
       <span
         className={cx(
-          SHEET,
-          'flex h-full w-[72%] flex-col items-center justify-center gap-2 text-ink/60',
+          sheet,
+          'flex h-full w-[94%] flex-col items-center justify-center gap-2 text-ink/60',
         )}
       >
         <FileText aria-hidden="true" size={24} />
@@ -337,7 +334,7 @@ function Thumbnail({ blank, error, label, number, ref, rotation, url }: Thumbnai
     return (
       <img
         alt={label}
-        className={cx(SHEET, 'max-h-full max-w-full object-contain')}
+        className={cx(sheet, 'max-h-full max-w-full object-contain')}
         // Otherwise a native image drag cancels the crop gesture.
         draggable={false}
         ref={ref}
@@ -355,7 +352,7 @@ function Thumbnail({ blank, error, label, number, ref, rotation, url }: Thumbnai
   // The cell may be a button, so the label stays even while there is nothing to show.
   return (
     <>
-      <Skeleton className="h-full w-[72%] rounded-sm" />
+      <Skeleton className="h-full w-[94%] rounded-sm" />
       <span className="sr-only">{t('pageGrid.loading', { number })}</span>
     </>
   )

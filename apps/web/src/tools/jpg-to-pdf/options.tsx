@@ -1,5 +1,12 @@
 import type { JpgToPdfOptions } from '@fuckpdf/tools'
-import { Fieldset, Label, NumberField, ToggleButton, ToggleButtonGroup } from '@fuckpdf/ui'
+import {
+  Description,
+  Fieldset,
+  Label,
+  NumberField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
@@ -34,6 +41,7 @@ export default function JpgToPdfOptionsPanel({ value, onChange }: OptionsPanelPr
         <ToggleButtonGroup
           aria-label={t('options.jpg-to-pdf.pageSize')}
           disallowEmptySelection
+          fullWidth
           onSelectionChange={(keys) =>
             onChange({
               ...options,
@@ -50,26 +58,56 @@ export default function JpgToPdfOptionsPanel({ value, onChange }: OptionsPanelPr
         </ToggleButtonGroup>
       </Fieldset>
 
-      <Fieldset>
-        <Fieldset.Legend>{t('options.jpg-to-pdf.orientation')}</Fieldset.Legend>
-        <ToggleButtonGroup
-          aria-label={t('options.jpg-to-pdf.orientation')}
-          disallowEmptySelection
-          onSelectionChange={(keys) =>
-            onChange({
-              ...options,
-              orientation: String([...keys][0] ?? orientation) as JpgToPdfOptions['orientation'],
-            })
-          }
-          selectedKeys={[orientation]}
-        >
-          {ORIENTATIONS.map((option) => (
-            <ToggleButton id={option.id} key={option.id}>
-              {t(`options.jpg-to-pdf.${option.label}`)}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </Fieldset>
+      {/* A page cut to the image has no orientation, and every fit mode is the same. */}
+      {pageSize === 'fit-image' ? null : (
+        <>
+          <Fieldset>
+            <Fieldset.Legend>{t('options.jpg-to-pdf.orientation')}</Fieldset.Legend>
+            <ToggleButtonGroup
+              aria-label={t('options.jpg-to-pdf.orientation')}
+              disallowEmptySelection
+              fullWidth
+              onSelectionChange={(keys) =>
+                onChange({
+                  ...options,
+                  orientation: String(
+                    [...keys][0] ?? orientation,
+                  ) as JpgToPdfOptions['orientation'],
+                })
+              }
+              selectedKeys={[orientation]}
+            >
+              {ORIENTATIONS.map((option) => (
+                <ToggleButton id={option.id} key={option.id}>
+                  {t(`options.jpg-to-pdf.${option.label}`)}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+          </Fieldset>
+          <Fieldset>
+            <Fieldset.Legend>{t('options.jpg-to-pdf.fitMode')}</Fieldset.Legend>
+            <ToggleButtonGroup
+              aria-label={t('options.jpg-to-pdf.fitMode')}
+              disallowEmptySelection
+              fullWidth
+              onSelectionChange={(keys) =>
+                onChange({
+                  ...options,
+                  fitMode: String([...keys][0] ?? fitMode) as JpgToPdfOptions['fitMode'],
+                })
+              }
+              selectedKeys={[fitMode]}
+            >
+              {FIT_MODES.map((option) => (
+                <ToggleButton id={option.id} key={option.id}>
+                  {t(`options.jpg-to-pdf.${option.label}`)}
+                </ToggleButton>
+              ))}
+            </ToggleButtonGroup>
+            <Description>{t(`options.jpg-to-pdf.fitHint.${fitMode}`)}</Description>
+          </Fieldset>
+        </>
+      )}
 
       <NumberField
         minValue={0}
@@ -83,27 +121,6 @@ export default function JpgToPdfOptionsPanel({ value, onChange }: OptionsPanelPr
           <NumberField.IncrementButton />
         </NumberField.Group>
       </NumberField>
-
-      <Fieldset>
-        <Fieldset.Legend>{t('options.jpg-to-pdf.fitMode')}</Fieldset.Legend>
-        <ToggleButtonGroup
-          aria-label={t('options.jpg-to-pdf.fitMode')}
-          disallowEmptySelection
-          onSelectionChange={(keys) =>
-            onChange({
-              ...options,
-              fitMode: String([...keys][0] ?? fitMode) as JpgToPdfOptions['fitMode'],
-            })
-          }
-          selectedKeys={[fitMode]}
-        >
-          {FIT_MODES.map((option) => (
-            <ToggleButton id={option.id} key={option.id}>
-              {t(`options.jpg-to-pdf.${option.label}`)}
-            </ToggleButton>
-          ))}
-        </ToggleButtonGroup>
-      </Fieldset>
     </div>
   )
 }

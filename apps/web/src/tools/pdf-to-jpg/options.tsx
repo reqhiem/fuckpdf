@@ -1,5 +1,12 @@
 import type { PdfToJpgOptions } from '@fuckpdf/tools'
-import { Fieldset, Label, NumberField, ToggleButton, ToggleButtonGroup } from '@fuckpdf/ui'
+import {
+  Description,
+  Fieldset,
+  Label,
+  NumberField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
@@ -28,6 +35,7 @@ export default function PdfToJpgOptionsPanel({ value, onChange }: OptionsPanelPr
           <NumberField.Input className="measure" />
           <NumberField.IncrementButton />
         </NumberField.Group>
+        <Description>{t('options.pdf-to-jpg.dpiHint')}</Description>
       </NumberField>
 
       <Fieldset>
@@ -35,6 +43,7 @@ export default function PdfToJpgOptionsPanel({ value, onChange }: OptionsPanelPr
         <ToggleButtonGroup
           aria-label={t('options.pdf-to-jpg.format')}
           disallowEmptySelection
+          fullWidth
           onSelectionChange={(keys) =>
             onChange({
               ...options,

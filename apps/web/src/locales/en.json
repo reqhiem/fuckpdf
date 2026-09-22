@@ -34,14 +34,15 @@
     "home": "Home",
     "privacy": "Privacy",
     "about": "About",
-    "licenses": "Licenses"
+    "licenses": "Licenses",
+    "source": "Source code on GitHub"
   },
   "theme": {
     "toggle": "Toggle colour theme"
   },
   "footer": {
     "privacy": "Your files stay in your browser. Nothing is uploaded, logged, or measured.",
-    "source": "Open source under the MIT licence.",
+    "source": "<0>Open source</0> under the MIT licence.",
     "nav": "Footer"
   },
   "landing": {

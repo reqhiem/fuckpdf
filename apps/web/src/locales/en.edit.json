@@ -1,8 +1,7 @@
 {
   "edit": {
-    "title": "The page",
-    "notice": "You can add things on top of this page. The text and images already in the PDF cannot be edited or removed here — they can only be covered.",
-    "hint": "Pick a tool, then drag on the page. Click something to select it: arrows nudge it by 1pt, Shift+arrows by 10pt, Delete removes it.",
+    "title": "Page editor",
+    "notice": "Existing text and images can only be covered, not edited.",
     "canvas": "Page canvas",
     "pages": "Pages",
     "pageOf": "Page {{page}} of {{total}}",
@@ -28,7 +27,6 @@
       "highlight": "Highlight"
     },
     "inspector": {
-      "empty": "Nothing selected. Click something on the page, or Tab into it, to change it here.",
       "onPage": "page {{page}}",
       "x": "X (pt)",
       "y": "Y (pt)",
@@ -48,9 +46,31 @@
       "stroke": "Stroke",
       "strokeWidth": "Stroke width (pt)",
       "opacity": "Opacity (%)",
-      "colorSwatch": "{{label}} picker",
-      "delete": "Delete this {{type}}"
+      "delete": "Delete this {{type}}",
+      "nothing": "Nothing selected.",
+      "onThisPage": "On this page",
+      "blank": "Nothing added to page {{page}} yet. Pick a tool above the page and drag on it. Text places with a click; Image asks for a PNG or JPEG.",
+      "keys": "Keyboard",
+      "keyNudge": "Nudge 1 pt",
+      "keyNudgeFast": "Nudge 10 pt",
+      "keyDelete": "Delete",
+      "keyEdit": "Edit text",
+      "keyDeselect": "Deselect",
+      "keyZoom": "Zoom",
+      "keyUndo": "Undo",
+      "hex": "{{label}} hex",
+      "add": "Add {{label}}",
+      "remove": "Remove {{label}}",
+      "none": "None",
+      "deselect": "Deselect"
     },
-    "imageFailed": "That image could not be read. PNG and JPEG files work; anything else has to be converted first."
+    "imageFailed": "That image could not be read. PNG and JPEG files work; anything else has to be converted first.",
+    "toolbar": "Editor tools",
+    "shortcut": "{{name}} ({{key}})",
+    "zoom": "Zoom",
+    "zoomIn": "Zoom in",
+    "zoomOut": "Zoom out",
+    "fit": "Fit to width",
+    "pageSize": "{{width}} × {{height}} pt"
   }
 }

@@ -22,6 +22,8 @@
       "live": "The result, as it stands.",
       "static": "The original file. Live preview is off at this size — run it to see the result.",
       "fallback": "The original file. This result cannot be previewed here."
-    }
+    },
+    "pageCount_one": "{{count}} page",
+    "pageCount_other": "{{count}} pages"
   }
 }

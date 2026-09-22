@@ -9,6 +9,7 @@ import {
   Switch,
   TextField,
 } from '@fuckpdf/ui'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
@@ -19,15 +20,28 @@ const MODES = [
   { id: 'size', label: 'modeSize' },
 ] as const
 
+const MB = 1_000_000
+const EVERY_N = 2
+
 export default function SplitOptionsPanel({ value, onChange }: OptionsPanelProps) {
   const { t } = useTranslation()
   const options = value as SplitOptions
   const mode = options.mode ?? 'all'
+  // Local text: re-joining the parsed list would swallow a comma the moment it is typed.
+  const [ranges, setRanges] = useState(() => options.ranges?.join(', ') ?? '')
 
   return (
     <div className="flex flex-col gap-4">
       <Select
-        onChange={(key) => onChange({ ...options, mode: String(key ?? mode) as SplitMode })}
+        // Seeded so the step receives the value the field displays, not `undefined`.
+        onChange={(key) =>
+          onChange({
+            ...options,
+            mode: String(key ?? mode) as SplitMode,
+            everyN: options.everyN ?? EVERY_N,
+            maxSize: options.maxSize ?? MB,
+          })
+        }
         value={mode}
       >
         <Label>{t('options.split.mode')}</Label>
@@ -53,7 +67,8 @@ export default function SplitOptionsPanel({ value, onChange }: OptionsPanelProps
 
       {mode === 'custom' && (
         <TextField
-          onChange={(text) =>
+          onChange={(text) => {
+            setRanges(text)
             onChange({
               ...options,
               ranges: text
@@ -61,11 +76,11 @@ export default function SplitOptionsPanel({ value, onChange }: OptionsPanelProps
                 .map((s) => s.trim())
                 .filter(Boolean),
             })
-          }
-          value={options.ranges?.join(',') ?? ''}
+          }}
+          value={ranges}
         >
           <Label>{t('options.split.ranges')}</Label>
-          <Input />
+          <Input className="measure" placeholder="1-3, 4-6, 7" />
           <Description>{t('options.split.rangesHint')}</Description>
         </TextField>
       )}
@@ -73,8 +88,8 @@ export default function SplitOptionsPanel({ value, onChange }: OptionsPanelProps
       {mode === 'every-n' && (
         <NumberField
           minValue={1}
-          onChange={(everyN) => onChange({ ...options, everyN: everyN ?? 1 })}
-          value={options.everyN ?? 1}
+          onChange={(everyN) => onChange({ ...options, everyN: everyN || EVERY_N })}
+          value={options.everyN ?? EVERY_N}
         >
           <Label>{t('options.split.everyN')}</Label>
           <NumberField.Group>
@@ -87,9 +102,11 @@ export default function SplitOptionsPanel({ value, onChange }: OptionsPanelProps
 
       {mode === 'size' && (
         <NumberField
-          minValue={1}
-          onChange={(maxSize) => onChange({ ...options, maxSize: maxSize ?? 1_000_000 })}
-          value={options.maxSize ?? 1_000_000}
+          formatOptions={{ maximumFractionDigits: 1 }}
+          minValue={0.1}
+          onChange={(mb) => onChange({ ...options, maxSize: Math.round((mb || 1) * MB) })}
+          step={0.1}
+          value={(options.maxSize ?? MB) / MB}
         >
           <Label>{t('options.split.maxSize')}</Label>
           <NumberField.Group>
@@ -97,6 +114,7 @@ export default function SplitOptionsPanel({ value, onChange }: OptionsPanelProps
             <NumberField.Input className="measure" />
             <NumberField.IncrementButton />
           </NumberField.Group>
+          <Description>{t('options.split.maxSizeHint')}</Description>
         </NumberField>
       )}
 

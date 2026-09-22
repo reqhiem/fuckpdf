@@ -1,28 +1,45 @@
 // `value`/`onChange` are ignored: the editor store owns the elements, and a copy through
 // the options object would be a second source of truth.
-import type { EditFont } from '@fuckpdf/tools'
+import type { EditElement, EditFont } from '@fuckpdf/tools'
 import {
   Button,
+  CloseButton,
+  ColorField,
+  ColorSwatch,
+  ColorSwatchPicker,
   Description,
   Fieldset,
-  Input,
+  IconButton,
+  Kbd,
   Label,
+  ListBox,
   NumberField,
   TextArea,
   TextField,
   ToggleButton,
   ToggleButtonGroup,
 } from '@fuckpdf/ui'
-import { useEffect, useState } from 'react'
+import { Minus, Plus } from 'lucide-react'
+import type { ReactNode } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { type EditPatch, useEditorStore } from '../../components/pdf-editor/store'
+import { TOOLS } from '../../components/pdf-editor/toolbar'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
 const FONTS: EditFont[] = ['helvetica', 'times', 'courier']
-const HEX = /^[0-9a-fA-F]{6}$/
 const PDF_MAX_POINTS = 14400
+const SWATCHES = ['1a1a1a', 'ffffff', 'e03131', 'f08c00', 'ffe14d', '2f9e44', '1971c2', '7048e8']
+// Keeps white on paper and ink on the dark ground visible.
+const RING = 'shadow-[inset_0_0_0_1px_var(--border)]'
+const IS_MAC = typeof navigator !== 'undefined' && /Mac|iP(hone|ad)/.test(navigator.platform)
 
 const round = (value: number) => Math.round(value * 10) / 10
+
+function Icon({ type }: { type: EditElement['type'] }) {
+  const Glyph = TOOLS.find((tool) => tool.id === type)?.Icon
+  return Glyph ? <Glyph aria-hidden={true} size={14} /> : null
+}
 
 export default function EditOptionsPanel(_props: OptionsPanelProps) {
   const { t } = useTranslation()
@@ -31,17 +48,25 @@ export default function EditOptionsPanel(_props: OptionsPanelProps) {
     state.elements.find((item) => item.id === state.selectedId),
   )
 
-  if (!element || !selectedId)
-    return <p className="text-sm text-muted">{t('edit.inspector.empty')}</p>
+  if (!element || !selectedId) return <Overview />
 
   const patch = (changes: EditPatch) => useEditorStore.getState().update(selectedId, changes)
+  const name = t(`edit.tools.${element.type}`)
 
   return (
     <div className="flex flex-col gap-4">
-      <p className="text-sm text-muted">
-        {t(`edit.tools.${element.type}`)} ·{' '}
-        <span className="measure">{t('edit.inspector.onPage', { page: element.page })}</span>
-      </p>
+      <div className="flex items-center gap-2 text-sm">
+        <Icon type={element.type} />
+        <span className="font-medium">{name}</span>
+        <span className="measure text-xs text-muted">
+          {t('edit.inspector.onPage', { page: element.page })}
+        </span>
+        <CloseButton
+          aria-label={t('edit.inspector.deselect')}
+          className="ml-auto"
+          onPress={() => useEditorStore.getState().select(null)}
+        />
+      </div>
 
       <div className="grid grid-cols-2 gap-3">
         <Num label={t('edit.inspector.x')} onChange={(x) => patch({ x })} value={element.x} />
@@ -100,6 +125,7 @@ export default function EditOptionsPanel(_props: OptionsPanelProps) {
                 patch({ font: String([...keys][0] ?? element.font) as EditFont })
               }
               selectedKeys={[element.font]}
+              size="sm"
             >
               {FONTS.map((font) => (
                 <ToggleButton id={font} key={font}>
@@ -129,11 +155,13 @@ export default function EditOptionsPanel(_props: OptionsPanelProps) {
           <Colour
             label={t('edit.inspector.fill')}
             onChange={(fill) => patch({ fill })}
+            optional
             value={element.fill ?? ''}
           />
           <Colour
             label={t('edit.inspector.stroke')}
             onChange={(stroke) => patch({ stroke })}
+            optional
             value={element.stroke ?? ''}
           />
         </>
@@ -147,30 +175,159 @@ export default function EditOptionsPanel(_props: OptionsPanelProps) {
         />
       ) : null}
 
-      {element.type === 'rect' ||
-      element.type === 'ellipse' ||
-      element.type === 'line' ||
-      element.type === 'ink' ? (
+      <div className="grid grid-cols-2 gap-3">
+        {element.type === 'rect' ||
+        element.type === 'ellipse' ||
+        element.type === 'line' ||
+        element.type === 'ink' ? (
+          <Num
+            label={t('edit.inspector.strokeWidth')}
+            min={0}
+            onChange={(strokeWidth) => patch({ strokeWidth })}
+            value={element.strokeWidth ?? 1}
+          />
+        ) : null}
         <Num
-          label={t('edit.inspector.strokeWidth')}
+          label={t('edit.inspector.opacity')}
+          max={100}
           min={0}
-          onChange={(strokeWidth) => patch({ strokeWidth })}
-          value={element.strokeWidth ?? 1}
+          onChange={(percent) => patch({ opacity: percent / 100 })}
+          value={(element.opacity ?? 1) * 100}
         />
-      ) : null}
+      </div>
 
-      <Num
-        label={t('edit.inspector.opacity')}
-        max={100}
-        min={0}
-        onChange={(percent) => patch({ opacity: percent / 100 })}
-        value={(element.opacity ?? 1) * 100}
-      />
-
-      <Button onPress={() => useEditorStore.getState().remove(selectedId)} variant="outline">
-        {t('edit.inspector.delete', { type: t(`edit.tools.${element.type}`) })}
+      <Button
+        onPress={() => useEditorStore.getState().remove(selectedId)}
+        size="sm"
+        variant="outline"
+      >
+        {t('edit.inspector.delete', { type: name })}
       </Button>
     </div>
+  )
+}
+
+function Overview() {
+  const { t } = useTranslation()
+  const page = useEditorStore((state) => state.page)
+  const elements = useEditorStore((state) => state.elements)
+  const onPage = useMemo(
+    () => elements.filter((element) => element.page === page),
+    [elements, page],
+  )
+  const mod = IS_MAC ? <Kbd.Abbr keyValue="command" /> : <Kbd.Content>Ctrl</Kbd.Content>
+  const arrows = (
+    <>
+      <Kbd.Abbr keyValue="left" />
+      <Kbd.Abbr keyValue="up" />
+      <Kbd.Abbr keyValue="right" />
+      <Kbd.Abbr keyValue="down" />
+    </>
+  )
+
+  return (
+    <div className="flex flex-col gap-5">
+      {onPage.length ? (
+        <div className="flex flex-col gap-2">
+          <p className="text-sm text-muted">{t('edit.inspector.nothing')}</p>
+          <p className="flex justify-between text-xs text-muted">
+            {t('edit.inspector.onThisPage')}
+            <span className="measure">{onPage.length}</span>
+          </p>
+          <ListBox
+            aria-label={t('edit.inspector.onThisPage')}
+            className="-mx-2 text-sm"
+            onAction={(key) => useEditorStore.getState().select(String(key))}
+          >
+            {onPage.map((element) => {
+              const name = t(`edit.tools.${element.type}`)
+              const x = Math.round(element.x)
+              const y = Math.round(element.y)
+              return (
+                <ListBox.Item
+                  id={element.id}
+                  key={element.id}
+                  textValue={t('edit.elementLabel', { type: name, x, y })}
+                >
+                  <Icon type={element.type} />
+                  <span className="truncate">
+                    {element.type === 'text' ? element.text.split('\n')[0] || name : name}
+                  </span>
+                  <span className="measure ml-auto shrink-0 text-xs text-muted">
+                    {x}, {y}
+                  </span>
+                </ListBox.Item>
+              )
+            })}
+          </ListBox>
+        </div>
+      ) : (
+        <p className="text-sm text-muted">
+          <span className="text-foreground">{t('edit.inspector.nothing')}</span>{' '}
+          {t('edit.inspector.blank', { page })}
+        </p>
+      )}
+
+      <section aria-labelledby="edit-keys" className="flex flex-col gap-2">
+        <p className="text-xs text-muted" id="edit-keys">
+          {t('edit.inspector.keys')}
+        </p>
+        <dl className="grid grid-cols-[auto_1fr] items-center gap-x-3 gap-y-2 text-xs">
+          <Shortcut label={t('edit.inspector.keyNudge')}>
+            <Kbd>{arrows}</Kbd>
+          </Shortcut>
+          <Shortcut label={t('edit.inspector.keyNudgeFast')}>
+            <Kbd>
+              <Kbd.Abbr keyValue="shift" />
+              {arrows}
+            </Kbd>
+          </Shortcut>
+          <Shortcut label={t('edit.inspector.keyDelete')}>
+            <Kbd>
+              <Kbd.Abbr keyValue="delete" />
+            </Kbd>
+          </Shortcut>
+          <Shortcut label={t('edit.inspector.keyEdit')}>
+            <Kbd>
+              <Kbd.Content>Enter</Kbd.Content>
+            </Kbd>
+          </Shortcut>
+          <Shortcut label={t('edit.inspector.keyDeselect')}>
+            <Kbd>
+              <Kbd.Content>Esc</Kbd.Content>
+            </Kbd>
+          </Shortcut>
+          <Shortcut label={t('edit.inspector.keyUndo')}>
+            <Kbd>
+              {mod}
+              <Kbd.Content>Z</Kbd.Content>
+            </Kbd>
+          </Shortcut>
+          <Shortcut label={t('edit.inspector.keyZoom')}>
+            <span className="flex gap-1">
+              <Kbd>
+                <Kbd.Content>+</Kbd.Content>
+              </Kbd>
+              <Kbd>
+                <Kbd.Content>−</Kbd.Content>
+              </Kbd>
+              <Kbd>
+                <Kbd.Content>0</Kbd.Content>
+              </Kbd>
+            </span>
+          </Shortcut>
+        </dl>
+      </section>
+    </div>
+  )
+}
+
+function Shortcut({ label, children }: { label: string; children: ReactNode }) {
+  return (
+    <>
+      <dt>{children}</dt>
+      <dd className="text-muted">{label}</dd>
+    </>
   )
 }
 
@@ -192,39 +349,74 @@ function Num({ label, value, min = 0, max = PDF_MAX_POINTS, onChange }: NumProps
     >
       <Label>{label}</Label>
       <NumberField.Group>
-        <NumberField.DecrementButton />
         <NumberField.Input className="measure" />
-        <NumberField.IncrementButton />
       </NumberField.Group>
     </NumberField>
   )
 }
 
-type ColourProps = { label: string; value: string; onChange: (value: string) => void }
+type ColourProps = {
+  label: string
+  value: string
+  optional?: boolean
+  onChange: (value: string) => void
+}
 
-function Colour({ label, value, onChange }: ColourProps) {
+function Colour({ label, value, optional = false, onChange }: ColourProps) {
   const { t } = useTranslation()
-  const [text, setText] = useState(value)
-  useEffect(() => setText(value), [value])
-
-  const type = (next: string) => {
-    setText(next)
-    if (HEX.test(next)) onChange(next.toLowerCase())
+  const colour = value ? `#${value}` : null
+  const pick = (next: { toString: (format: 'hex') => string } | null) => {
+    if (next) onChange(next.toString('hex').slice(1).toLowerCase())
   }
 
   return (
-    <TextField onChange={type} value={text}>
-      <Label>{label}</Label>
-      <div className="flex items-center gap-2">
-        <Input className="measure" />
-        <input
-          aria-label={t('edit.inspector.colorSwatch', { label })}
-          className="size-9 shrink-0 cursor-pointer rounded-[var(--radius)] border border-[var(--border)] bg-transparent"
-          onChange={(event) => type(event.target.value.slice(1))}
-          type="color"
-          value={HEX.test(text) ? `#${text}` : '#000000'}
-        />
+    <Fieldset className="gap-2">
+      <div className="flex items-center justify-between">
+        <Fieldset.Legend>{label}</Fieldset.Legend>
+        {optional ? (
+          colour ? (
+            <IconButton
+              label={t('edit.inspector.remove', { label: label.toLowerCase() })}
+              onPress={() => onChange('')}
+            >
+              <Minus aria-hidden={true} size={14} />
+            </IconButton>
+          ) : (
+            <IconButton
+              label={t('edit.inspector.add', { label: label.toLowerCase() })}
+              onPress={() => onChange(SWATCHES[0] as string)}
+            >
+              <Plus aria-hidden={true} size={14} />
+            </IconButton>
+          )
+        ) : null}
       </div>
-    </TextField>
+      {colour ? (
+        <>
+          <ColorSwatchPicker aria-label={label} onChange={pick} size="xs" value={colour}>
+            {SWATCHES.map((swatch) => (
+              <ColorSwatchPicker.Item color={`#${swatch}`} key={swatch}>
+                <ColorSwatchPicker.Swatch className={RING} />
+                <ColorSwatchPicker.Indicator />
+              </ColorSwatchPicker.Item>
+            ))}
+          </ColorSwatchPicker>
+          <ColorField
+            aria-label={t('edit.inspector.hex', { label })}
+            onChange={pick}
+            value={colour}
+          >
+            <ColorField.Group>
+              <ColorField.Prefix>
+                <ColorSwatch className={RING} color={colour} size="xs" />
+              </ColorField.Prefix>
+              <ColorField.Input className="measure" />
+            </ColorField.Group>
+          </ColorField>
+        </>
+      ) : (
+        <p className="text-xs text-muted">{t('edit.inspector.none')}</p>
+      )}
+    </Fieldset>
   )
 }

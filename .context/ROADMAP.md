@@ -8,7 +8,7 @@ it ships.
 | **M0 Shell** | Vite/React/Tailwind scaffold, tokens, landing, tool page template, dropzone, worker RPC, PDFium thumbnail rendering, Cloudflare deploy with headers, CSP, zero-egress E2E test | **DONE** |
 | **M1 Structural tools** | Merge, Split, Remove, Extract, Organize, Rotate, Page numbers, Watermark, Crop, JPG→PDF, PDF→JPG | **DONE**, all eleven byte-verified in a real browser |
 | **Document surfaces** | A thumbnail per input file with drag-to-reorder, the page grid on every single-file tool, and a live preview that runs the real step | **DONE** |
-| **Design system** | HeroUI v3 (Tailwind v4 + React Aria) behind the `packages/ui` seam, brand tokens remapped in `tokens.css` | **IN PROGRESS** |
+| **Design system** | HeroUI v3 (Tailwind v4 + React Aria) behind the `packages/ui` seam, brand tokens remapped in `tokens.css`; two-column tool page, tooltips on every icon control, zoomable editor | **DONE** |
 | **M2 Security & forms** | Protect, Unlock, Sign, Redact (rasterizing), Forms fill, Edit (overlays) | **Edit DONE**; the rest **PLANNED**, blocked, see below |
 | **M3 Optimize** | Compress, Repair, OCR; Ghostscript gated on D1 | **PLANNED** |
 | **M4 v1 launch** | Offline SW, privacy page, licenses page, a11y pass, i18n extraction, copy pass | **PLANNED** |

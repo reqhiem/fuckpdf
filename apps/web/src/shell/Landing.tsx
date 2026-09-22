@@ -38,7 +38,7 @@ export function Landing() {
           aria-hidden="true"
           className="hero-grid grid-fade pointer-events-none absolute inset-0 -z-10"
         />
-        <div className="mx-auto max-w-6xl px-6 pt-14 pb-16 sm:pt-20">
+        <div className="mx-auto max-w-7xl px-6 pt-14 pb-16 sm:pt-20">
           <p className="text-sm font-medium text-muted">{t('landing.kicker')}</p>
           <h1 className="mt-4 text-[clamp(3.25rem,12vw,6rem)] font-bold leading-[0.85] tracking-[-0.04em]">
             <span>{t('brand.fuck')}</span>
@@ -72,7 +72,7 @@ export function Landing() {
         </div>
       </section>
 
-      <section aria-labelledby="proof-title" className="mx-auto max-w-6xl px-6 pb-20">
+      <section aria-labelledby="proof-title" className="mx-auto max-w-7xl px-6 pb-20">
         <div className="surface p-6 sm:p-8">
           <h2 className="max-w-2xl text-2xl font-bold tracking-tight sm:text-3xl" id="proof-title">
             {t('proof.title')}
@@ -94,7 +94,7 @@ export function Landing() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-6 pb-10" id="tools">
+      <section className="mx-auto max-w-7xl px-6 pb-10" id="tools">
         <div className="mb-10 flex flex-wrap items-center justify-between gap-4">
           <p className="text-sm text-muted">{t('landing.toolsHint')}</p>
           <SearchField

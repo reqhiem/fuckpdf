@@ -41,32 +41,57 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
 
   return (
     <div className="flex flex-col gap-4">
-      <Fieldset>
-        <Fieldset.Legend>{t('options.page-numbers.position')}</Fieldset.Legend>
-        {/* Squared off: each button is a miniature page, and a circle has no corners for
-            the dot to sit in. */}
-        <div className="grid w-fit grid-cols-3 gap-1">
-          {POSITIONS.map((pos) => (
-            <ToggleButton
-              aria-label={t(`options.page-numbers.anchors.${pos.id}`)}
-              className={`flex rounded-[0.25rem] p-2 ${pos.align}`}
-              isIconOnly
-              isSelected={options.position === pos.id}
-              key={pos.id}
-              onChange={() => onChange({ ...options, position: pos.id })}
-            >
-              {/* Not `bg-current`: HeroUI's selected foreground is quieter than the
-                  unselected dots, which makes the selection read backwards. */}
-              <span
-                aria-hidden="true"
-                className={`size-1.5 rounded-full ${
-                  options.position === pos.id ? 'bg-accent' : 'bg-muted'
-                }`}
-              />
-            </ToggleButton>
-          ))}
-        </div>
-      </Fieldset>
+      <div className="flex items-end gap-4">
+        <Fieldset>
+          <Fieldset.Legend>{t('options.page-numbers.position')}</Fieldset.Legend>
+          {/* Squared off: each button is a miniature page, and a circle has no corners for
+              the dot to sit in. */}
+          <div className="grid w-fit grid-cols-3 gap-1">
+            {POSITIONS.map((pos) => (
+              <ToggleButton
+                aria-label={t(`options.page-numbers.anchors.${pos.id}`)}
+                className={`flex rounded-[0.25rem] p-2 ${pos.align}`}
+                isIconOnly
+                isSelected={options.position === pos.id}
+                key={pos.id}
+                onChange={() => onChange({ ...options, position: pos.id })}
+              >
+                {/* Not `bg-current`: HeroUI's selected foreground is quieter than the
+                    unselected dots, which makes the selection read backwards. */}
+                <span
+                  aria-hidden="true"
+                  className={`size-1.5 rounded-full ${
+                    options.position === pos.id ? 'bg-accent' : 'bg-muted'
+                  }`}
+                />
+              </ToggleButton>
+            ))}
+          </div>
+        </Fieldset>
+
+        <NumberField
+          className="min-w-0 flex-1"
+          minValue={0}
+          onChange={(margin) => onChange({ ...options, margin: margin ?? 20 })}
+          value={options.margin ?? 20}
+        >
+          <Label>{t('options.page-numbers.margin')}</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input className="measure" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+      </div>
+
+      <TextField
+        onChange={(format) => onChange({ ...options, format })}
+        value={options.format ?? '{n}'}
+      >
+        <Label>{t('options.page-numbers.format')}</Label>
+        <Input />
+        <Description>{t('options.page-numbers.formatHint')}</Description>
+      </TextField>
 
       <NumberField
         onChange={(firstNumber) => onChange({ ...options, firstNumber: firstNumber ?? 1 })}
@@ -82,17 +107,8 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
 
       <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
         <Label>{t('options.page-numbers.pages')}</Label>
-        <Input />
+        <Input className="measure" />
         <Description>{t('options.page-numbers.pagesHint')}</Description>
-      </TextField>
-
-      <TextField
-        onChange={(format) => onChange({ ...options, format })}
-        value={options.format ?? '{n}'}
-      >
-        <Label>{t('options.page-numbers.format')}</Label>
-        <Input />
-        <Description>{t('options.page-numbers.formatHint')}</Description>
       </TextField>
 
       <Fieldset>
@@ -100,6 +116,7 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
         <ToggleButtonGroup
           aria-label={t('options.page-numbers.font')}
           disallowEmptySelection
+          fullWidth
           onSelectionChange={(keys) =>
             onChange({
               ...options,
@@ -143,19 +160,6 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
         </div>
         <Description>{t('options.page-numbers.colorHint')}</Description>
       </TextField>
-
-      <NumberField
-        minValue={0}
-        onChange={(margin) => onChange({ ...options, margin: margin ?? 20 })}
-        value={options.margin ?? 20}
-      >
-        <Label>{t('options.page-numbers.margin')}</Label>
-        <NumberField.Group>
-          <NumberField.DecrementButton />
-          <NumberField.Input className="measure" />
-          <NumberField.IncrementButton />
-        </NumberField.Group>
-      </NumberField>
     </div>
   )
 }

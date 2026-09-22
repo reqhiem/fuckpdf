@@ -25,22 +25,24 @@ export default function RotateOptionsPanel({ value, onChange }: OptionsPanelProp
         <ToggleButtonGroup
           aria-label={t('options.rotate.angle')}
           disallowEmptySelection
+          fullWidth
           onSelectionChange={(keys) =>
             onChange({ ...options, angle: Number([...keys][0] ?? angle) })
           }
           selectedKeys={[String(angle)]}
         >
           {ANGLES.map((deg) => (
-            <ToggleButton id={String(deg)} key={deg}>
+            <ToggleButton className="measure" id={String(deg)} key={deg}>
               {t(`options.rotate.angle${deg}`)}
             </ToggleButton>
           ))}
         </ToggleButtonGroup>
+        <Description>{t('options.rotate.angleHint')}</Description>
       </Fieldset>
 
       <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
         <Label>{t('options.rotate.pages')}</Label>
-        <Input />
+        <Input className="measure" />
         <Description>{t('options.rotate.pagesHint')}</Description>
       </TextField>
     </div>

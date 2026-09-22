@@ -217,7 +217,7 @@ Derived from reqhiem.dev (`src/app/globals.css`). Same tokens, harsher voice.
 
 ### 6.2 Layout & type
 
-- Container `max-w-6xl px-6`. Landing hero: tiny uppercase tracking-wide kicker (muted), oversized H1 (Space Grotesk 700, tight letter-spacing, weight contrast like "AI Engineer **+** Researcher"), one-sentence dek, two buttons (accent solid, ghost).
+- Container `max-w-7xl px-6`. Landing hero: tiny uppercase tracking-wide kicker (muted), oversized H1 (Space Grotesk 700, tight letter-spacing, weight contrast like "AI Engineer **+** Researcher"), one-sentence dek, two buttons (accent solid, ghost).
 - Tool cards: surface, icon (lucide, 20 px, accent on hover), name (600), one line muted description. Hover: translate-y -2 px, border → accent/40.
 - Tool page: two columns ≥ lg (preview/pages left, options right, sticky run button), single column below.
 - Numbers, file sizes, page counts in mono.

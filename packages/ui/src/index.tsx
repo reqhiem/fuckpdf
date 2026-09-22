@@ -1,7 +1,7 @@
 // The single seam onto HeroUI v3. App code imports from here, never from `@heroui/react`.
-import { Button, Tooltip } from '@heroui/react'
+import { Button, type ButtonProps, Tooltip } from '@heroui/react'
 import { Moon, Sun, UploadCloud } from 'lucide-react'
-import type { ReactNode } from 'react'
+import type { ReactElement, ReactNode } from 'react'
 import { useEffect, useRef, useState } from 'react'
 
 export type { ButtonProps } from '@heroui/react'
@@ -13,16 +13,26 @@ export {
   CheckboxGroup,
   Chip,
   CloseButton,
+  ColorArea,
+  ColorField,
+  ColorPicker,
+  ColorSlider,
+  ColorSwatch,
+  ColorSwatchPicker,
   Description,
+  Disclosure,
   FieldError,
   Fieldset,
   Form,
   Input,
   InputGroup,
+  Kbd,
   Label,
+  Link,
   ListBox,
   Modal,
   NumberField,
+  Popover,
   ProgressBar,
   Radio,
   RadioGroup,
@@ -37,12 +47,34 @@ export {
   TextField,
   ToggleButton,
   ToggleButtonGroup,
+  Toolbar,
   Tooltip,
   Typography,
 } from '@heroui/react'
 
 export function cx(...values: Array<string | false | null | undefined>) {
   return values.filter(Boolean).join(' ')
+}
+
+/** Wraps one pressable (Button, ToggleButton) so its name also shows on hover and focus. */
+export function Hint({ label, children }: { label: string; children: ReactElement }) {
+  return (
+    <Tooltip delay={400}>
+      {children}
+      <Tooltip.Content>{label}</Tooltip.Content>
+    </Tooltip>
+  )
+}
+
+export function IconButton({
+  label,
+  ...props
+}: Omit<ButtonProps, 'aria-label'> & { label: string }) {
+  return (
+    <Hint label={label}>
+      <Button aria-label={label} isIconOnly size="sm" variant="ghost" {...props} />
+    </Hint>
+  )
 }
 
 type DropzoneProps = {
@@ -156,11 +188,8 @@ export function ThemeToggle({
   onToggle: () => void
 }) {
   return (
-    <Tooltip>
-      <Button aria-label={label} isIconOnly onPress={onToggle} size="sm" variant="ghost">
-        {dark ? <Sun aria-hidden="true" size={18} /> : <Moon aria-hidden="true" size={18} />}
-      </Button>
-      <Tooltip.Content>{label}</Tooltip.Content>
-    </Tooltip>
+    <IconButton label={label} onPress={onToggle}>
+      {dark ? <Sun aria-hidden="true" size={18} /> : <Moon aria-hidden="true" size={18} />}
+    </IconButton>
   )
 }

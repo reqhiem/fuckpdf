@@ -1,53 +1,50 @@
 {
   "options": {
     "merge": {
-      "ranges": "Page ranges (filename=1-5, one per line)"
+      "ranges": "Pages from each file",
+      "rangesHint": "Optional. One file per line, as name=pages. Files not listed keep every page.",
+      "rangesPlaceholder": "report.pdf=1-3, 7"
     },
     "split": {
       "mode": "Split mode",
-      "modeAll": "Extract all pages",
+      "modeAll": "One file per page",
       "modeCustom": "Custom ranges",
       "modeEveryN": "Every N pages",
       "modeSize": "By max file size",
-      "ranges": "Custom ranges (comma separated)",
+      "ranges": "Ranges",
       "rangesHint": "One output file per range, e.g. 1-3, 4-6, 7.",
       "everyN": "Pages per split",
-      "maxSize": "Max file size (bytes)",
-      "zip": "Output as ZIP"
-    },
-    "remove-pages": {
-      "pages": "Pages to remove (e.g. 1-5, 8)"
+      "maxSize": "Max file size (MB)",
+      "maxSizeHint": "Each part stays at or under this size.",
+      "zip": "Bundle the parts into one ZIP"
     },
     "extract-pages": {
-      "pages": "Pages to extract (e.g. 1-5, 8)",
-      "split": "Extract each page to a separate file"
-    },
-    "organize": {
-      "addBlank": "Insert blank page"
+      "split": "Save each page as its own file"
     },
     "rotate": {
       "angle": "Rotation angle",
       "angle90": "90°",
       "angle180": "180°",
       "angle270": "270°",
-      "pages": "Pages to rotate (empty for all)",
-      "pagesHint": "Single pages and ranges, e.g. 1-5, 8."
+      "pages": "Pages",
+      "pagesHint": "Empty rotates every page. Ranges work, e.g. 1-5, 8.",
+      "angleHint": "Clockwise."
     },
     "page-numbers": {
       "position": "Position",
-      "firstNumber": "First number",
-      "pages": "Pages to number (empty for all)",
-      "pagesHint": "Single pages and ranges, e.g. 1-5, 8.",
+      "firstNumber": "Start at",
+      "pages": "Pages",
+      "pagesHint": "Empty numbers every page. Ranges work, e.g. 1-5, 8.",
       "format": "Format (use {n} and {total})",
       "formatHint": "{n} is the number on that page, {total} the page count.",
       "font": "Font",
       "fontHelvetica": "Helvetica",
       "fontTimesRoman": "Times Roman",
-      "size": "Font size",
+      "size": "Size (pt)",
       "color": "Text color",
       "colorHint": "Six hex digits, no leading hash.",
       "colorSwatch": "Pick the text color",
-      "margin": "Margin",
+      "margin": "Margin (pt)",
       "anchors": {
         "top-left": "Top left",
         "top-center": "Top centre",
@@ -65,9 +62,11 @@
       "typeText": "Text",
       "typeImage": "Image",
       "text": "Text",
-      "image": "Image file",
-      "mode": "Placement mode",
-      "modePositioned": "Positioned",
+      "image": "Image",
+      "imagePick": "Choose PNG or JPEG",
+      "imageReplace": "Replace image",
+      "mode": "Placement",
+      "modePositioned": "Once",
       "modeTiled": "Tiled",
       "position": "Position",
       "positionCenter": "Centre",
@@ -76,46 +75,54 @@
       "positionBottomLeft": "Bottom left",
       "positionBottomRight": "Bottom right",
       "opacity": "Opacity",
-      "rotation": "Rotation (degrees)",
+      "rotation": "Rotation",
       "layer": "Layer",
       "layerOver": "Over content",
       "layerUnder": "Under content",
-      "pages": "Pages to watermark",
-      "pagesHint": "Single pages and ranges, e.g. 1-5, 8. Empty marks every page.",
+      "pages": "Pages",
+      "pagesHint": "Empty marks every page. Ranges work, e.g. 1-5, 8.",
       "color": "Color",
       "colorHint": "Six hex digits, no leading hash.",
       "colorSwatch": "Pick the text color",
-      "size": "Size"
+      "size": "Size (pt)"
     },
     "crop": {
+      "box": "Crop box",
+      "boxHint": "In points (72 per inch), from the page's bottom-left corner. Dragging on a page replaces these.",
       "boxX": "X",
       "boxY": "Y",
       "boxWidth": "Width",
       "boxHeight": "Height",
-      "pages": "Pages to crop",
-      "pagesHint": "Single pages and ranges, e.g. 1-5, 8. Empty crops every page.",
-      "flatten": "Flatten (rasterize)"
+      "pages": "Pages",
+      "pagesHint": "Empty crops every page. Ranges work, e.g. 1-5, 8."
     },
     "jpg-to-pdf": {
       "pageSize": "Page size",
       "pageSizeA4": "A4",
       "pageSizeLetter": "Letter",
-      "pageSizeFitImage": "Fit image",
+      "pageSizeFitImage": "Image size",
       "orientation": "Orientation",
       "orientationPortrait": "Portrait",
       "orientationLandscape": "Landscape",
-      "margin": "Margin",
+      "margin": "Margin (pt)",
       "fitMode": "Fit mode",
-      "fitModeContain": "Contain",
-      "fitModeCover": "Cover",
-      "fitModeFill": "Fill"
+      "fitModeContain": "Fit",
+      "fitModeCover": "Fill",
+      "fitModeFill": "Stretch",
+      "fitHint": {
+        "contain": "The whole image, with space left over.",
+        "cover": "Fills the page, trimming the edges.",
+        "fill": "Fills the page, distorting the image."
+      }
     },
     "pdf-to-jpg": {
       "dpi": "DPI (72-300)",
+      "dpiHint": "150 suits screens, 300 suits print.",
       "format": "Format",
       "formatJpeg": "JPEG",
       "formatPng": "PNG",
       "formatWebp": "WebP"
-    }
+    },
+    "pickHint": "Click pages in the grid to pick them. Shift-click picks a range, Ctrl or ⌘-click adds one more."
   }
 }

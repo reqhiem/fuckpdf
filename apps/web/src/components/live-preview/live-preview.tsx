@@ -9,7 +9,7 @@ import { canRunLive, previewKind } from './preview-source'
 
 const DEBOUNCE_MS = 400
 
-const PREVIEW_DPI = 96
+const PREVIEW_DPI = 144
 
 export type LivePreviewProps = {
   module: ToolModule | null
@@ -136,14 +136,14 @@ export function LivePreview({ module, file, options }: LivePreviewProps) {
         alt={alt(shot)}
         className={cx(
           SHEET,
-          'max-h-[26rem] max-w-full object-contain transition-opacity duration-200',
+          'max-h-full max-w-full object-contain transition-opacity duration-200',
           busy && 'opacity-60',
         )}
         draggable={false}
         src={shot.url}
       />
     )
-  else if (busy) body = <Skeleton className="aspect-[1/1.414] w-40 rounded-sm" />
+  else if (busy) body = <Skeleton className="aspect-[1/1.414] h-full max-h-[36rem] rounded-sm" />
   else body = <p className="px-4 text-center text-sm text-muted">{t('preview.none')}</p>
 
   const caption = [
@@ -157,7 +157,7 @@ export function LivePreview({ module, file, options }: LivePreviewProps) {
     <figure>
       <div
         aria-busy={busy}
-        className="flex min-h-56 items-center justify-center overflow-hidden rounded-[var(--radius)] bg-ink/5 p-3 dark:bg-paper/5"
+        className="flex min-h-96 lg:h-[calc(100dvh-11rem)] items-center justify-center overflow-hidden rounded-[var(--radius)] bg-ink/5 p-6 dark:bg-paper/5"
       >
         {body}
       </div>

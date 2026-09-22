@@ -32,13 +32,13 @@ export type PageGridCropProps = {
   onCropChange?: (crop: PageGridCrop | null) => void
 }
 
-const DEFAULT_CAPABILITIES: Required<PageGridCapabilities> = {
-  reorder: true,
-  select: true,
-  rotate: true,
-  remove: true,
-  duplicate: true,
-  insertBlank: true,
+const NO_CAPABILITIES: Required<PageGridCapabilities> = {
+  reorder: false,
+  select: false,
+  rotate: false,
+  remove: false,
+  duplicate: false,
+  insertBlank: false,
 }
 
 const renumber = (pages: PageRef[]): PageRef[] =>
@@ -57,7 +57,7 @@ export function PageGrid({
 }: PageGridProps & PageGridCropProps) {
   const { t } = useTranslation()
   const store = useThumbnails(bytes, password)
-  const active = useMemo(() => ({ ...DEFAULT_CAPABILITIES, ...capabilities }), [capabilities])
+  const active = useMemo(() => ({ ...NO_CAPABILITIES, ...capabilities }), [capabilities])
   const ids = useMemo(() => pages.map((page) => page.id), [pages])
   const anchor = useRef<string | null>(null)
 
@@ -164,7 +164,7 @@ export function PageGrid({
         </p>
         {onCropChange ? <p className="text-sm text-muted">{t('pageGrid.cropHint')}</p> : null}
         {active.insertBlank ? (
-          <Button onPress={insertBlank} variant="ghost">
+          <Button onPress={insertBlank} size="sm" variant="ghost">
             <FilePlus2 aria-hidden="true" size={16} />
             {t('pageGrid.insertBlank')}
           </Button>
@@ -183,7 +183,9 @@ export function PageGrid({
         <SortableContext items={ids} strategy={rectSortingStrategy}>
           <ul
             aria-label={t('pageGrid.grid')}
-            className="grid grid-cols-2 gap-4 sm:grid-cols-3 lg:grid-cols-4"
+            // auto-fill, not auto-fit: a four-page file keeps small cells instead of four
+            // posters stretched across the column.
+            className="grid grid-cols-[repeat(auto-fill,minmax(9.5rem,1fr))] gap-3"
           >
             {pages.map((page) => (
               <PageCell

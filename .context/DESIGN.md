@@ -88,7 +88,8 @@ size ceiling ~6rem. Prose capped at 65–75ch.
 
 ## Layout
 
-- Content column `max-w-6xl`, 24px gutters.
+- Content column `max-w-7xl`, 24px gutters, on every route: header, footer, landing, static
+  pages and tool pages share one left edge.
 - Responsive grids: `repeat(auto-fit, minmax(280px, 1fr))` rather than breakpoint columns. The
   one sanctioned exception is the landing tool grid, where cards have deliberately varying
   spans to give the eleven tools a hierarchy; varying spans need a known column count, so it
@@ -117,6 +118,26 @@ result arriving. Reveals enhance already-visible content; nothing is gated behin
 transition that a headless render would never fire.
 
 `prefers-reduced-motion: reduce` collapses durations to ~0 globally in `tokens.css`.
+
+## The tool page
+
+Two columns from `lg` up: the work surface on the left (`minmax(0,1fr)`), and one sticky
+20rem sidebar on the right. The sidebar is a single surface with hairline-separated
+sections, in task order: the file (a compact row — the pages are already on the left),
+options, the run action, and then the result. The result lands where the user pressed Run,
+never at the top of the page, and once it exists Download is the only primary action.
+A result is discarded as soon as any input or option changes: a download that no longer
+matches the screen is how someone ships the wrong file. Below `lg` the sidebar stacks
+under the surface and nothing is sticky.
+
+Every icon-only control uses `IconButton` (or `Hint` around a `ToggleButton` or `Link`)
+from `@fuckpdf/ui`, so its accessible name is also its tooltip.
+
+The editor is the one surface that owns its height: roughly viewport-tall, a toolbar
+(tools, history, zoom, pages), a scrolling well with the measuring grid, and a status line.
+Zoom is 25–400 %, fit-to-width by default, and the page is re-rendered at the zoom's DPI so
+it stays sharp. When nothing is selected its sidebar section lists the elements on the page
+and the keyboard, instead of saying "nothing selected".
 
 ## One surface per tool
 

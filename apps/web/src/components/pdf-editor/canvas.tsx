@@ -61,12 +61,13 @@ function useImageUrls(elements: EditElement[]): Map<string, string> {
 
 export type CanvasProps = {
   pageUrl: string | undefined
+  displayWidth: number
   width: number
   height: number
   failed: boolean
 }
 
-export function Canvas({ pageUrl, width, height, failed }: CanvasProps) {
+export function Canvas({ pageUrl, displayWidth, width, height, failed }: CanvasProps) {
   const { t } = useTranslation()
   const elements = useEditorStore((state) => state.elements)
   const selectedId = useEditorStore((state) => state.selectedId)
@@ -270,6 +271,8 @@ export function Canvas({ pageUrl, width, height, failed }: CanvasProps) {
     const origin = toPoint(event)
     const elementId = crypto.randomUUID()
     if (tool === 'text') {
+      // Otherwise mousedown's default focuses the canvas and blurs the new text box at once.
+      event.preventDefault()
       store().add(build('text', elementId, origin, origin, []))
       store().setTool('select')
       setEditingId(elementId)
@@ -383,68 +386,66 @@ export function Canvas({ pageUrl, width, height, failed }: CanvasProps) {
   const editing = shown.find((element) => element.id === editingId)
 
   return (
-    <div className="flex justify-center">
-      <div
-        className="relative w-full bg-white shadow-[0_1px_3px_rgb(0_0_0/0.18)] ring-1 ring-ink/15"
-        ref={frame}
-        style={{ maxWidth: `${width}px`, aspectRatio: `${width} / ${height}` }}
+    <div
+      className="relative bg-white shadow-[0_1px_3px_rgb(0_0_0/0.18)] ring-1 ring-ink/15"
+      ref={frame}
+      style={{ width: displayWidth, aspectRatio: `${width} / ${height}` }}
+    >
+      {pageUrl ? (
+        <img
+          alt={t('edit.pageAlt', { page })}
+          className="block h-full w-full select-none"
+          draggable={false}
+          src={pageUrl}
+        />
+      ) : failed ? (
+        <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-sm text-ink/60">
+          {t('edit.failed')}
+        </p>
+      ) : (
+        <Skeleton className="h-full w-full" />
+      )}
+
+      <svg
+        aria-label={t('edit.canvas')}
+        className="absolute inset-0 h-full w-full touch-none outline-none"
+        onKeyDown={canvasKeyDown}
+        onPointerDown={pressPage}
+        ref={svg}
+        role="application"
+        // biome-ignore lint/a11y/noNoninteractiveTabindex: the overlay is the editing surface and has to take focus for the keyboard path (FR-11)
+        tabIndex={0}
+        viewBox={`0 0 ${width} ${height}`}
       >
-        {pageUrl ? (
-          <img
-            alt={t('edit.pageAlt', { page })}
-            className="block h-full w-full select-none"
-            draggable={false}
-            src={pageUrl}
-          />
-        ) : failed ? (
-          <p className="absolute inset-0 flex items-center justify-center p-4 text-center text-sm text-ink/60">
-            {t('edit.failed')}
-          </p>
-        ) : (
-          <Skeleton className="h-full w-full" />
-        )}
-
-        <svg
-          aria-label={t('edit.canvas')}
-          className="absolute inset-0 h-full w-full touch-none outline-none"
-          onKeyDown={canvasKeyDown}
-          onPointerDown={pressPage}
-          ref={svg}
-          role="application"
-          // biome-ignore lint/a11y/noNoninteractiveTabindex: the overlay is the editing surface and has to take focus for the keyboard path (FR-11)
-          tabIndex={0}
-          viewBox={`0 0 ${width} ${height}`}
-        >
-          {shown.map((element) => (
-            <ElementView
-              editing={element.id === editingId}
-              element={element}
-              imageUrl={urls.get(element.id)}
-              key={element.id}
-              label={t('edit.elementLabel', {
-                type: t(`edit.tools.${element.type}`),
-                x: Math.round(element.x),
-                y: Math.round(element.y),
-              })}
-              onGrab={onGrab}
-              onKeyDown={onElementKeyDown}
-              onSelect={store().select}
-              scale={scale}
-              selected={element.id === selectedId}
-            />
-          ))}
-        </svg>
-
-        {editing?.type === 'text' ? (
-          <TextEditor
-            element={editing}
-            key={editing.id}
-            onDone={() => setEditingId(null)}
-            pageWidth={width}
+        {shown.map((element) => (
+          <ElementView
+            editing={element.id === editingId}
+            element={element}
+            imageUrl={urls.get(element.id)}
+            key={element.id}
+            label={t('edit.elementLabel', {
+              type: t(`edit.tools.${element.type}`),
+              x: Math.round(element.x),
+              y: Math.round(element.y),
+            })}
+            onGrab={onGrab}
+            onKeyDown={onElementKeyDown}
+            onSelect={store().select}
             scale={scale}
+            selected={element.id === selectedId}
           />
-        ) : null}
-      </div>
+        ))}
+      </svg>
+
+      {editing?.type === 'text' ? (
+        <TextEditor
+          element={editing}
+          key={editing.id}
+          onDone={() => setEditingId(null)}
+          pageWidth={width}
+          scale={scale}
+        />
+      ) : null}
     </div>
   )
 }

@@ -12,6 +12,7 @@ Each entry: status, date, rationale, what it blocks.
 | D5 | Repo license | **MIT** (v1) | 2026-09-21 |
 | D6 | Monorepo layout per PRD §7 | **Accepted, two packages dropped** | 2026-09-21 |
 | D7 | Vite 8 / TypeScript 6 instead of Vite 7 | **Accepted** | 2026-09-21 |
+| D10 | Result in the sidebar, discarded on any change | **Accepted** | 2026-09-22 |
 
 ---
 
@@ -133,3 +134,20 @@ trees in different regions of the page, so they cannot share selection state thr
 A module-level store is what makes that work. Drag state deliberately stays out of it —
 in-flight geometry lives in local state and lands on pointerup, because a store write per
 `pointermove` re-renders the element list on every frame.
+
+## D10 — The result lives next to Run, and dies with its inputs
+
+**Decided.** PRD FR-2 says "options panel → run → results panel" and the first layout read
+that literally as a vertical order, which put the result above the document once it
+arrived and pushed the pages down. The result now appears in the sidebar under the Run
+button, where the user is already looking, and the work surface does not move.
+
+A result is cleared when files, options, page order, selection, crop or editor elements
+change. Keeping it would leave a Download button for a document that no longer matches the
+screen. Run again is only offered while nothing has changed.
+
+Also taken in the same pass: remove-pages and extract-pages keep Run disabled until a page
+is selected, because an empty selection reaches the step as "" and the step reads that as
+every page. Crop sends the grid selection as `pages`, and a drawn crop box writes its
+numbers into the form, so the fields and the page never disagree. Crop's Flatten switch was
+removed; the step's flatten path throws on every call.

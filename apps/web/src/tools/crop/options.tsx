@@ -1,86 +1,53 @@
 import type { CropOptions } from '@fuckpdf/tools'
-import { Description, Input, Label, NumberField, Switch, TextField } from '@fuckpdf/ui'
+import { Description, Fieldset, Input, Label, NumberField, TextField } from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
+type Box = CropOptions['box']
+
+const FIELDS: { key: keyof Box; label: string; min: number }[] = [
+  { key: 'x', label: 'boxX', min: 0 },
+  { key: 'y', label: 'boxY', min: 0 },
+  { key: 'width', label: 'boxWidth', min: 1 },
+  { key: 'height', label: 'boxHeight', min: 1 },
+]
+
+// No flatten switch: the step's flatten path throws unconditionally, so offering it only
+// guarantees an error.
 export default function CropOptionsPanel({ value, onChange }: OptionsPanelProps) {
   const { t } = useTranslation()
   const options = value as CropOptions
   const box = options.box || { x: 0, y: 0, width: 100, height: 100 }
 
   return (
-    <div className="flex flex-col gap-4">
-      <div className="grid grid-cols-2 gap-4">
-        <NumberField
-          minValue={0}
-          onChange={(x) => onChange({ ...options, box: { ...box, x: x ?? 0 } })}
-          value={box.x}
-        >
-          <Label>{t('options.crop.boxX')}</Label>
-          <NumberField.Group>
-            <NumberField.DecrementButton />
-            <NumberField.Input className="measure" />
-            <NumberField.IncrementButton />
-          </NumberField.Group>
-        </NumberField>
-
-        <NumberField
-          minValue={0}
-          onChange={(y) => onChange({ ...options, box: { ...box, y: y ?? 0 } })}
-          value={box.y}
-        >
-          <Label>{t('options.crop.boxY')}</Label>
-          <NumberField.Group>
-            <NumberField.DecrementButton />
-            <NumberField.Input className="measure" />
-            <NumberField.IncrementButton />
-          </NumberField.Group>
-        </NumberField>
-
-        <NumberField
-          minValue={1}
-          onChange={(width) => onChange({ ...options, box: { ...box, width: width ?? 1 } })}
-          value={box.width}
-        >
-          <Label>{t('options.crop.boxWidth')}</Label>
-          <NumberField.Group>
-            <NumberField.DecrementButton />
-            <NumberField.Input className="measure" />
-            <NumberField.IncrementButton />
-          </NumberField.Group>
-        </NumberField>
-
-        <NumberField
-          minValue={1}
-          onChange={(height) => onChange({ ...options, box: { ...box, height: height ?? 1 } })}
-          value={box.height}
-        >
-          <Label>{t('options.crop.boxHeight')}</Label>
-          <NumberField.Group>
-            <NumberField.DecrementButton />
-            <NumberField.Input className="measure" />
-            <NumberField.IncrementButton />
-          </NumberField.Group>
-        </NumberField>
-      </div>
+    <div className="flex flex-col gap-5">
+      <Fieldset>
+        <Fieldset.Legend>{t('options.crop.box')}</Fieldset.Legend>
+        <Description>{t('options.crop.boxHint')}</Description>
+        <div className="grid grid-cols-2 gap-3">
+          {FIELDS.map((field) => (
+            <NumberField
+              key={field.key}
+              minValue={field.min}
+              onChange={(next) =>
+                onChange({ ...options, box: { ...box, [field.key]: next ?? field.min } })
+              }
+              value={box[field.key]}
+            >
+              <Label>{t(`options.crop.${field.label}`)}</Label>
+              <NumberField.Group>
+                <NumberField.Input className="measure" />
+              </NumberField.Group>
+            </NumberField>
+          ))}
+        </div>
+      </Fieldset>
 
       <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
         <Label>{t('options.crop.pages')}</Label>
-        <Input />
+        <Input className="measure" />
         <Description>{t('options.crop.pagesHint')}</Description>
       </TextField>
-
-      <Switch
-        isSelected={options.flatten ?? false}
-        onChange={(flatten) => onChange({ ...options, flatten })}
-      >
-        <Switch.Content>
-          <Switch.Control>
-            <Switch.Thumb />
-          </Switch.Control>
-          <Label>{t('options.crop.flatten')}</Label>
-        </Switch.Content>
-      </Switch>
     </div>
   )
 }

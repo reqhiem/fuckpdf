@@ -15,7 +15,7 @@ import {
   sortableKeyboardCoordinates,
   useSortable,
 } from '@dnd-kit/sortable'
-import { cx, Skeleton } from '@fuckpdf/ui'
+import { cx, IconButton, Skeleton } from '@fuckpdf/ui'
 import { FileText, GripVertical, Trash2 } from 'lucide-react'
 import type { CSSProperties } from 'react'
 import { useMemo } from 'react'
@@ -28,6 +28,7 @@ export type FileStripProps = {
   files: File[]
   onChange: (files: File[]) => void
   reorderable?: boolean
+  compact?: boolean
 }
 
 // Two identical files can be dropped twice, so a drag is keyed on identity, not name.
@@ -40,7 +41,12 @@ const idOf = (file: File): string => {
   return made
 }
 
-export function FileStrip({ files, onChange, reorderable = false }: FileStripProps) {
+export function FileStrip({
+  files,
+  onChange,
+  reorderable = false,
+  compact = false,
+}: FileStripProps) {
   const { t } = useTranslation()
   const thumbnails = useFileThumbnails(files)
   const ids = useMemo(() => files.map(idOf), [files])
@@ -77,6 +83,20 @@ export function FileStrip({ files, onChange, reorderable = false }: FileStripPro
   }
 
   const remove = (file: File) => onChange(files.filter((item) => item !== file))
+
+  if (compact)
+    return (
+      <ul aria-label={t('preview.files')} className="space-y-2">
+        {files.map((file) => (
+          <FileRow
+            file={file}
+            key={idOf(file)}
+            onRemove={remove}
+            thumbnail={thumbnails.get(file)}
+          />
+        ))}
+      </ul>
+    )
 
   const list = (
     <ul
@@ -146,6 +166,9 @@ function SortableFileCard(props: FileCardProps) {
   return <FileCard {...props} sortable={{ ...sortable, style }} />
 }
 
+// HeroUI's button types reject dnd-kit's `aria-pressed: undefined`.
+const grip = ({ 'aria-pressed': _pressed, ...rest }: Sortable['attributes']) => rest
+
 function FileCard({
   file,
   onRemove,
@@ -157,22 +180,19 @@ function FileCard({
 }: FileCardProps) {
   const { t } = useTranslation()
 
-  const action =
-    'inline-flex size-9 shrink-0 items-center justify-center rounded-lg text-muted transition-colors hover:bg-ink/5 hover:text-ink dark:hover:bg-paper/10 dark:hover:text-paper'
-
   return (
     <li
-      className={cx('surface p-2', sortable?.isDragging && 'z-10 opacity-80')}
+      className={cx(sortable?.isDragging && 'z-10 opacity-80')}
       ref={sortable?.setNodeRef}
       style={sortable?.style}
     >
-      <div className="flex aspect-square w-full items-center justify-center overflow-hidden rounded-xl bg-ink/5 dark:bg-paper/5">
+      <div className="flex aspect-[3/4] w-full items-center justify-center">
         <Preview file={file} thumbnail={thumbnail} />
       </div>
 
       <div className="mt-2 flex items-center gap-1">
         {reorderable ? (
-          <span aria-hidden="true" className="measure shrink-0 pl-1 text-xs text-muted">
+          <span aria-hidden="true" className="measure shrink-0 pr-1 text-xs text-muted">
             {position}
           </span>
         ) : null}
@@ -183,26 +203,56 @@ function FileCard({
           <p className="measure text-xs text-muted">{formatBytes(file.size)}</p>
         </div>
         {sortable ? (
-          <button
-            aria-label={t('preview.reorder', { name: file.name, number: position, total })}
-            className={cx(action, 'cursor-grab')}
+          <IconButton
+            className="cursor-grab"
+            label={t('preview.reorder', { name: file.name, number: position, total })}
             ref={sortable.setActivatorNodeRef}
-            type="button"
-            {...sortable.attributes}
+            {...grip(sortable.attributes)}
             {...sortable.listeners}
           >
             <GripVertical aria-hidden="true" size={16} />
-          </button>
+          </IconButton>
         ) : null}
-        <button
-          aria-label={t('preview.remove', { name: file.name })}
-          className={cx(action, 'hover:text-danger')}
-          onClick={() => onRemove(file)}
-          type="button"
+        <IconButton
+          className="hover:text-danger"
+          label={t('preview.remove', { name: file.name })}
+          onPress={() => onRemove(file)}
         >
           <Trash2 aria-hidden="true" size={16} />
-        </button>
+        </IconButton>
       </div>
+    </li>
+  )
+}
+
+function FileRow({
+  file,
+  onRemove,
+  thumbnail,
+}: Pick<FileCardProps, 'file' | 'onRemove' | 'thumbnail'>) {
+  const { t } = useTranslation()
+  const pages = isRendered(thumbnail) ? thumbnail.pages : undefined
+  return (
+    <li className="flex items-center gap-3">
+      <div className="flex h-12 w-10 shrink-0 items-center justify-center overflow-hidden p-0.5">
+        <Preview file={file} thumbnail={thumbnail} />
+      </div>
+      <div className="mr-auto min-w-0">
+        <p className="truncate text-sm" title={file.name}>
+          {file.name}
+        </p>
+        <p className="measure text-xs text-muted">
+          {formatBytes(file.size)}
+          {pages ? ` · ${t('preview.pageCount', { count: pages })}` : ''}
+        </p>
+      </div>
+      <IconButton
+        className="hover:text-danger"
+        label={t('preview.remove', { name: file.name })}
+        onPress={() => onRemove(file)}
+      >
+        <Trash2 aria-hidden="true" size={16} />
+      </IconButton>
     </li>
   )
 }

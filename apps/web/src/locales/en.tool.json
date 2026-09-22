@@ -25,6 +25,11 @@
     "errorDetail": "Technical detail",
     "copyDetail": "Copy detail",
     "copied": "Copied",
-    "passwordNote": "Used in this tab to open the file. It is never stored and never sent."
+    "passwordNote": "Used in this tab to open the file. It is never stored and never sent.",
+    "optionsHeading": {
+      "edit": "Selection"
+    },
+    "runAgain": "Run again",
+    "copyFailed": "Could not copy. Select the text instead."
   }
 }

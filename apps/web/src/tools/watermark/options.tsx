@@ -1,5 +1,6 @@
 import type { WatermarkOptions } from '@fuckpdf/tools'
 import {
+  Button,
   Description,
   Fieldset,
   Input,
@@ -12,6 +13,7 @@ import {
   ToggleButton,
   ToggleButtonGroup,
 } from '@fuckpdf/ui'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
@@ -48,6 +50,8 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
   const position = options.position ?? 'center'
   const layer = options.layer ?? 'over'
   const color = options.color ?? '000000'
+  const picker = useRef<HTMLInputElement>(null)
+  const [imageName, setImageName] = useState<string>()
 
   return (
     <div className="flex flex-col gap-4">
@@ -56,6 +60,7 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
         <ToggleButtonGroup
           aria-label={t('options.watermark.type')}
           disallowEmptySelection
+          fullWidth
           onSelectionChange={(keys) =>
             onChange({ ...options, type: String([...keys][0] ?? type) as WatermarkOptions['type'] })
           }
@@ -75,20 +80,60 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
           <Input />
         </TextField>
       ) : (
-        // A file picker has no HeroUI field; its own <label> is what names the input.
-        <label className="flex flex-col gap-1 text-sm font-medium">
-          {t('options.watermark.image')}
+        <div className="flex flex-col gap-2">
+          <Label>{t('options.watermark.image')}</Label>
+          <Button className="w-full" onPress={() => picker.current?.click()} variant="secondary">
+            {t(imageName ? 'options.watermark.imageReplace' : 'options.watermark.imagePick')}
+          </Button>
+          {imageName ? <p className="truncate text-sm text-muted">{imageName}</p> : null}
           <input
             accept="image/png, image/jpeg"
+            aria-hidden="true"
+            className="sr-only"
             onChange={async (event) => {
               const file = event.target.files?.[0]
               if (!file) return
               const buffer = await file.arrayBuffer()
+              setImageName(file.name)
               onChange({ ...options, imageBytes: new Uint8Array(buffer), imageMime: file.type })
             }}
+            ref={picker}
+            tabIndex={-1}
             type="file"
           />
-        </label>
+        </div>
+      )}
+
+      {type === 'text' && (
+        <>
+          <TextField onChange={(next) => onChange({ ...options, color: next })} value={color}>
+            <Label>{t('options.watermark.color')}</Label>
+            <div className="flex items-center gap-2">
+              <Input className="measure" />
+              <input
+                aria-label={t('options.watermark.colorSwatch')}
+                className="size-9 shrink-0 cursor-pointer rounded-[var(--radius)] border border-[var(--border)] bg-transparent"
+                onChange={(event) => onChange({ ...options, color: event.target.value.slice(1) })}
+                type="color"
+                value={HEX.test(color) ? `#${color}` : '#000000'}
+              />
+            </div>
+            <Description>{t('options.watermark.colorHint')}</Description>
+          </TextField>
+
+          <NumberField
+            minValue={1}
+            onChange={(size) => onChange({ ...options, size: size ?? 48 })}
+            value={options.size ?? 48}
+          >
+            <Label>{t('options.watermark.size')}</Label>
+            <NumberField.Group>
+              <NumberField.DecrementButton />
+              <NumberField.Input className="measure" />
+              <NumberField.IncrementButton />
+            </NumberField.Group>
+          </NumberField>
+        </>
       )}
 
       <Fieldset>
@@ -96,6 +141,7 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
         <ToggleButtonGroup
           aria-label={t('options.watermark.mode')}
           disallowEmptySelection
+          fullWidth
           onSelectionChange={(keys) =>
             onChange({ ...options, mode: String([...keys][0] ?? mode) as WatermarkOptions['mode'] })
           }
@@ -146,6 +192,7 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
         onChange={(opacity) =>
           onChange({ ...options, opacity: Array.isArray(opacity) ? (opacity[0] ?? 0.5) : opacity })
         }
+        formatOptions={{ style: 'percent' }}
         step={0.05}
         value={options.opacity ?? 0.5}
       >
@@ -157,23 +204,33 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
         </Slider.Track>
       </Slider>
 
-      <NumberField
-        onChange={(rotation) => onChange({ ...options, rotation: rotation ?? 45 })}
+      <Slider
+        formatOptions={{ style: 'unit', unit: 'degree' }}
+        maxValue={180}
+        minValue={-180}
+        onChange={(rotation) =>
+          onChange({
+            ...options,
+            rotation: Array.isArray(rotation) ? (rotation[0] ?? 45) : rotation,
+          })
+        }
+        step={5}
         value={options.rotation ?? 45}
       >
         <Label>{t('options.watermark.rotation')}</Label>
-        <NumberField.Group>
-          <NumberField.DecrementButton />
-          <NumberField.Input className="measure" />
-          <NumberField.IncrementButton />
-        </NumberField.Group>
-      </NumberField>
+        <Slider.Output className="measure" />
+        <Slider.Track>
+          <Slider.Fill />
+          <Slider.Thumb />
+        </Slider.Track>
+      </Slider>
 
       <Fieldset>
         <Fieldset.Legend>{t('options.watermark.layer')}</Fieldset.Legend>
         <ToggleButtonGroup
           aria-label={t('options.watermark.layer')}
           disallowEmptySelection
+          fullWidth
           onSelectionChange={(keys) =>
             onChange({
               ...options,
@@ -192,41 +249,9 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
 
       <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
         <Label>{t('options.watermark.pages')}</Label>
-        <Input />
+        <Input className="measure" />
         <Description>{t('options.watermark.pagesHint')}</Description>
       </TextField>
-
-      {type === 'text' && (
-        <>
-          <TextField onChange={(next) => onChange({ ...options, color: next })} value={color}>
-            <Label>{t('options.watermark.color')}</Label>
-            <div className="flex items-center gap-2">
-              <Input className="measure" />
-              <input
-                aria-label={t('options.watermark.colorSwatch')}
-                className="size-9 shrink-0 cursor-pointer rounded-[var(--radius)] border border-[var(--border)] bg-transparent"
-                onChange={(event) => onChange({ ...options, color: event.target.value.slice(1) })}
-                type="color"
-                value={HEX.test(color) ? `#${color}` : '#000000'}
-              />
-            </div>
-            <Description>{t('options.watermark.colorHint')}</Description>
-          </TextField>
-
-          <NumberField
-            minValue={1}
-            onChange={(size) => onChange({ ...options, size: size ?? 48 })}
-            value={options.size ?? 48}
-          >
-            <Label>{t('options.watermark.size')}</Label>
-            <NumberField.Group>
-              <NumberField.DecrementButton />
-              <NumberField.Input className="measure" />
-              <NumberField.IncrementButton />
-            </NumberField.Group>
-          </NumberField>
-        </>
-      )}
     </div>
   )
 }

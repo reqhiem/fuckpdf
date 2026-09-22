@@ -1,5 +1,14 @@
-import { Button, ToggleButton, ToggleButtonGroup } from '@fuckpdf/ui'
 import {
+  Hint,
+  IconButton,
+  Separator,
+  ToggleButton,
+  ToggleButtonGroup,
+  Toolbar as ToolbarRoot,
+} from '@fuckpdf/ui'
+import {
+  ChevronLeft,
+  ChevronRight,
   Circle,
   Highlighter,
   ImagePlus,
@@ -11,6 +20,9 @@ import {
   Trash2,
   Type,
   Undo2,
+  UnfoldHorizontal,
+  ZoomIn,
+  ZoomOut,
 } from 'lucide-react'
 import type { ComponentType } from 'react'
 import { useRef } from 'react'
@@ -19,23 +31,40 @@ import { type EditorTool, useEditorStore } from './store'
 
 type IconProps = { size?: number; 'aria-hidden'?: boolean }
 
-const TOOLS: { id: EditorTool; Icon: ComponentType<IconProps> }[] = [
-  { id: 'select', Icon: MousePointer2 },
-  { id: 'text', Icon: Type },
+export const TOOLS: { id: EditorTool; Icon: ComponentType<IconProps>; key?: string }[] = [
+  { id: 'select', Icon: MousePointer2, key: 'V' },
+  { id: 'text', Icon: Type, key: 'T' },
   { id: 'image', Icon: ImagePlus },
-  { id: 'rect', Icon: Square },
-  { id: 'ellipse', Icon: Circle },
-  { id: 'line', Icon: Minus },
-  { id: 'ink', Icon: PenLine },
-  { id: 'highlight', Icon: Highlighter },
+  { id: 'rect', Icon: Square, key: 'R' },
+  { id: 'ellipse', Icon: Circle, key: 'O' },
+  { id: 'line', Icon: Minus, key: 'L' },
+  { id: 'ink', Icon: PenLine, key: 'P' },
+  { id: 'highlight', Icon: Highlighter, key: 'H' },
 ]
 
 export type ToolbarProps = {
   onImage: (file: File) => void
   isDisabled: boolean
+  zoom: number
+  isFit: boolean
+  onZoom: (direction: 1 | -1) => void
+  onFit: () => void
+  page: number
+  pageCount: number
+  onTurn: (delta: number) => void
 }
 
-export function Toolbar({ onImage, isDisabled }: ToolbarProps) {
+export function Toolbar({
+  onImage,
+  isDisabled,
+  zoom,
+  isFit,
+  onZoom,
+  onFit,
+  page,
+  pageCount,
+  onTurn,
+}: ToolbarProps) {
   const { t } = useTranslation()
   const activeTool = useEditorStore((state) => state.activeTool)
   const selectedId = useEditorStore((state) => state.selectedId)
@@ -45,7 +74,10 @@ export function Toolbar({ onImage, isDisabled }: ToolbarProps) {
   const picker = useRef<HTMLInputElement>(null)
 
   return (
-    <div className="flex flex-wrap items-center gap-3">
+    <ToolbarRoot
+      aria-label={t('edit.toolbar')}
+      className="flex w-full flex-wrap items-center gap-1 border-b border-[var(--separator)] px-2 py-1.5"
+    >
       <ToggleButtonGroup
         aria-label={t('edit.toolsLabel')}
         disallowEmptySelection
@@ -56,42 +88,74 @@ export function Toolbar({ onImage, isDisabled }: ToolbarProps) {
           if (next === 'image') picker.current?.click()
         }}
         selectedKeys={[activeTool]}
+        size="sm"
       >
-        {TOOLS.map(({ id, Icon }) => (
-          <ToggleButton aria-label={t(`edit.tools.${id}`)} id={id} isIconOnly key={id}>
-            <Icon aria-hidden={true} size={16} />
-          </ToggleButton>
+        {TOOLS.map(({ id, Icon, key }) => (
+          <Hint
+            key={id}
+            label={
+              key ? t('edit.shortcut', { name: t(`edit.tools.${id}`), key }) : t(`edit.tools.${id}`)
+            }
+          >
+            <ToggleButton aria-label={t(`edit.tools.${id}`)} id={id} isIconOnly>
+              <Icon aria-hidden={true} size={16} />
+            </ToggleButton>
+          </Hint>
         ))}
       </ToggleButtonGroup>
 
+      <Separator className="mx-1 h-5" />
+
+      <IconButton isDisabled={!canUndo} label={t('edit.undo')} onPress={() => store().undo()}>
+        <Undo2 aria-hidden={true} size={16} />
+      </IconButton>
+      <IconButton isDisabled={!canRedo} label={t('edit.redo')} onPress={() => store().redo()}>
+        <Redo2 aria-hidden={true} size={16} />
+      </IconButton>
+      <IconButton
+        isDisabled={!selectedId}
+        label={t('edit.delete')}
+        onPress={() => selectedId && store().remove(selectedId)}
+      >
+        <Trash2 aria-hidden={true} size={16} />
+      </IconButton>
+
       <div className="ml-auto flex items-center gap-1">
-        <Button
-          aria-label={t('edit.undo')}
-          isDisabled={!canUndo}
-          isIconOnly
-          onPress={() => store().undo()}
-          variant="ghost"
-        >
-          <Undo2 aria-hidden={true} size={16} />
-        </Button>
-        <Button
-          aria-label={t('edit.redo')}
-          isDisabled={!canRedo}
-          isIconOnly
-          onPress={() => store().redo()}
-          variant="ghost"
-        >
-          <Redo2 aria-hidden={true} size={16} />
-        </Button>
-        <Button
-          aria-label={t('edit.delete')}
-          isDisabled={!selectedId}
-          isIconOnly
-          onPress={() => selectedId && store().remove(selectedId)}
-          variant="ghost"
-        >
-          <Trash2 aria-hidden={true} size={16} />
-        </Button>
+        <IconButton isDisabled={isDisabled} label={t('edit.zoomOut')} onPress={() => onZoom(-1)}>
+          <ZoomOut aria-hidden={true} size={16} />
+        </IconButton>
+        <span className="measure w-12 text-center text-xs" title={t('edit.zoom')}>
+          {Math.round(zoom * 100)}%
+        </span>
+        <IconButton isDisabled={isDisabled} label={t('edit.zoomIn')} onPress={() => onZoom(1)}>
+          <ZoomIn aria-hidden={true} size={16} />
+        </IconButton>
+        <IconButton isDisabled={isDisabled || isFit} label={t('edit.fit')} onPress={onFit}>
+          <UnfoldHorizontal aria-hidden={true} size={16} />
+        </IconButton>
+
+        {pageCount > 1 ? (
+          <>
+            <Separator className="mx-1 h-5" />
+            <IconButton
+              isDisabled={page <= 1}
+              label={t('edit.previousPage')}
+              onPress={() => onTurn(-1)}
+            >
+              <ChevronLeft aria-hidden={true} size={16} />
+            </IconButton>
+            <span className="measure text-xs whitespace-nowrap">
+              {t('edit.pageOf', { page, total: pageCount })}
+            </span>
+            <IconButton
+              isDisabled={page >= pageCount}
+              label={t('edit.nextPage')}
+              onPress={() => onTurn(1)}
+            >
+              <ChevronRight aria-hidden={true} size={16} />
+            </IconButton>
+          </>
+        ) : null}
       </div>
 
       <input
@@ -107,6 +171,6 @@ export function Toolbar({ onImage, isDisabled }: ToolbarProps) {
         tabIndex={-1}
         type="file"
       />
-    </div>
+    </ToolbarRoot>
   )
 }

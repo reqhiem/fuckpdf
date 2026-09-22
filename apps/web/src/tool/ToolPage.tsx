@@ -11,9 +11,8 @@ import {
 import {
   Alert,
   Button,
-  Card,
-  cx,
   Description,
+  Disclosure,
   Dropzone,
   Input,
   Label,
@@ -22,7 +21,8 @@ import {
   TextField,
 } from '@fuckpdf/ui'
 import { zipSync } from 'fflate'
-import { lazy, Suspense, useEffect, useMemo, useRef, useState } from 'react'
+import { Check, Copy } from 'lucide-react'
+import { lazy, type ReactNode, Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router'
 import { FileStrip } from '../components/file-strip'
@@ -65,7 +65,7 @@ export function ToolPage() {
   const [running, setRunning] = useState(false)
   const [outputs, setOutputs] = useState<Output[]>([])
   const [error, setError] = useState<RunError | null>(null)
-  const [copied, setCopied] = useState(false)
+  const [copied, setCopied] = useState<'done' | 'failed' | null>(null)
   const [passwordFile, setPasswordFile] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [gridBytes, setGridBytes] = useState<Uint8Array | null>(null)
@@ -122,6 +122,10 @@ export function ToolPage() {
       live = false
     }
   }, [files, gridCapabilities, needsBytes])
+
+  // A result that no longer matches the inputs on screen is how someone downloads the wrong file.
+  // biome-ignore lint/correctness/useExhaustiveDependencies: the dependencies are the trigger, not inputs to the body
+  useEffect(() => setOutputs([]), [files, options, pages, selected, crop, elements])
 
   const totalIn = useMemo(() => files.reduce((sum, file) => sum + file.size, 0), [files])
   const totalOut = useMemo(
@@ -198,10 +202,23 @@ export function ToolPage() {
     if (toolId === 'organize') return { operations: toOrganizeOperations(pages) }
     if (toolId === 'remove-pages' || toolId === 'extract-pages')
       return { pages: toPageRangeString(pages, selected) }
-    if (toolId === 'crop' && crop) return { box: crop.rect }
+    if (toolId === 'crop' && selected.size) return { pages: toPageRangeString(pages, selected) }
     if (toolId === 'edit') return { elements }
     return {}
   }
+
+  const drawCrop = (next: PageGridCrop | null) => {
+    setCrop(next)
+    if (!next) return
+    const round = (value: number) => Math.round(value * 10) / 10
+    const { x, y, width, height } = next.rect
+    setOptions((current) => ({
+      ...current,
+      box: { x: round(x), y: round(y), width: round(width), height: round(height) },
+    }))
+  }
+
+  const needsSelection = (toolId === 'remove-pages' || toolId === 'extract-pages') && !selected.size
 
   const download = () => {
     const single = outputs[0]
@@ -240,10 +257,10 @@ export function ToolPage() {
     void navigator.clipboard
       .writeText(error.detail)
       .then(() => {
-        setCopied(true)
-        setTimeout(() => setCopied(false), 2000)
+        setCopied('done')
+        setTimeout(() => setCopied(null), 2000)
       })
-      .catch(() => undefined)
+      .catch(() => setCopied('failed'))
   }
 
   const stageLabel =
@@ -251,149 +268,86 @@ export function ToolPage() {
       ? t(`toolPage.stage.${progress.stage}`)
       : t('tool.progress')
 
-  const column = toolId === 'edit' ? 'max-w-7xl' : 'max-w-6xl'
   const optionsPanel = !GRID_ONLY_TOOLS.has(toolId)
+  const stripSurface = REORDERABLE_TOOLS.has(toolId)
+  const done = outputs.length > 0
+  const section = 'space-y-4 p-5'
+  const heading = 'text-base font-semibold'
+
+  let surface: ReactNode = null
+  if (stripSurface)
+    surface = (
+      <div className="space-y-4">
+        <FileStrip files={files} onChange={setFiles} reorderable />
+        {files.length < maxFiles ? (
+          <Dropzone
+            accept={module?.accept ?? ['application/pdf']}
+            compact
+            hint={t('toolPage.addFilesHint')}
+            label={t('toolPage.addFiles')}
+            multiple
+            onFiles={select}
+          />
+        ) : null}
+      </div>
+    )
+  else if (PREVIEW_TOOLS.has(toolId) && files[0])
+    surface = <LivePreview file={files[0]} module={module} options={options} />
+  else if (!gridBytes)
+    surface = <Skeleton className="h-96 rounded-[var(--radius)] lg:h-[calc(100dvh-11rem)]" />
+  else if (gridCapabilities)
+    surface = (
+      <PageGrid
+        bytes={gridBytes}
+        capabilities={gridCapabilities}
+        onChange={setPages}
+        onSelectedChange={setSelected}
+        pages={pages}
+        selected={selected}
+        {...(toolId === 'crop' ? { crop, onCropChange: drawCrop } : {})}
+      />
+    )
+  else if (toolId === 'edit')
+    surface = (
+      <Suspense
+        fallback={<Skeleton className="h-96 rounded-[var(--radius)] lg:h-[calc(100dvh-11rem)]" />}
+      >
+        <PdfEditor bytes={gridBytes} onChange={setElements} />
+      </Suspense>
+    )
 
   return (
-    <div className={cx('mx-auto px-6 py-12', column)}>
+    <div className="mx-auto max-w-7xl px-6 py-8">
       <Link className="text-sm text-muted" to="/">
         {t('tool.back')}
       </Link>
-      <h1 className="mt-5 text-4xl font-bold tracking-tight">{t(`tools.${toolId}.name`)}</h1>
-      <p className="mt-3 max-w-xl text-muted">{t(`tools.${toolId}.description`)}</p>
-
-      {error ? (
-        <Alert className="mt-8" status="danger">
-          <Alert.Indicator />
-          <Alert.Content>
-            <Alert.Title>{t('toolPage.errorTitle')}</Alert.Title>
-            <Alert.Description>{error.message}</Alert.Description>
-            <details className="mt-3">
-              <summary className="cursor-pointer text-sm text-muted">
-                {t('toolPage.errorDetail')}
-              </summary>
-              <pre className="measure mt-2 max-h-48 overflow-auto rounded-lg bg-ink/5 p-3 text-xs whitespace-pre-wrap dark:bg-paper/5">
-                {error.detail}
-              </pre>
-              <Button className="mt-2" onPress={copyDetail} size="sm" variant="outline">
-                {copied ? t('toolPage.copied') : t('toolPage.copyDetail')}
-              </Button>
-            </details>
-          </Alert.Content>
-        </Alert>
-      ) : null}
-
-      {outputs.length ? (
-        <Card className="mt-8">
-          <Card.Header>
-            <Card.Title className="text-xl font-bold">{t('tool.results')}</Card.Title>
-            <Card.Description>{t('tool.resultReady')}</Card.Description>
-          </Card.Header>
-          <Card.Content>
-            <dl className="grid gap-5 sm:grid-cols-3">
-              <Measure
-                label={t('toolPage.before')}
-                value={`${t('toolPage.fileCount', { count: files.length })} · ${formatBytes(totalIn)}`}
-              />
-              <Measure
-                label={t('toolPage.after')}
-                value={`${t('toolPage.fileCount', { count: outputs.length })} · ${formatBytes(totalOut)}`}
-              />
-              {pages.length ? (
-                <Measure label={t('toolPage.pages')} value={String(pages.length)} />
-              ) : null}
-            </dl>
-            <p className="mt-6 text-sm text-muted">{t('toolPage.outputs')}</p>
-            <ul className="mt-2 divide-y divide-[var(--separator)]">
-              {outputs.map((output) => (
-                <li className="flex items-center justify-between gap-4 py-2" key={output.name}>
-                  <span className="truncate text-sm">{output.name}</span>
-                  <span className="measure text-xs text-muted">
-                    {formatBytes(output.bytes.byteLength)}
-                  </span>
-                </li>
-              ))}
-            </ul>
-          </Card.Content>
-          <Card.Footer className="flex flex-wrap gap-3">
-            <Button onPress={download}>{t('tool.download')}</Button>
-            <Button onPress={startOver} variant="ghost">
-              {t('tool.startOver')}
-            </Button>
-          </Card.Footer>
-        </Card>
-      ) : null}
+      <h1 className="mt-3 text-3xl font-bold tracking-tight">{t(`tools.${toolId}.name`)}</h1>
+      <p className="mt-1 text-muted">{t(`tools.${toolId}.description`)}</p>
 
       {files.length ? (
-        <div
-          className={cx(
-            'mt-10 grid items-start gap-6',
-            optionsPanel && 'lg:grid-cols-[minmax(0,1fr)_22rem]',
-          )}
-        >
-          <div className="min-w-0 space-y-5">
-            <FileStrip
-              files={files}
-              onChange={setFiles}
-              reorderable={REORDERABLE_TOOLS.has(toolId)}
-            />
+        <div className="mt-6 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_20rem]">
+          <div className="min-w-0">{surface}</div>
 
-            {gridCapabilities && gridBytes ? (
-              <PageGrid
-                bytes={gridBytes}
-                capabilities={gridCapabilities}
-                onChange={setPages}
-                onSelectedChange={setSelected}
-                pages={pages}
-                selected={selected}
-                {...(toolId === 'crop' ? { crop, onCropChange: setCrop } : {})}
-              />
-            ) : null}
-
-            {toolId === 'edit' && gridBytes ? (
-              <Suspense fallback={<Skeleton className="h-[32rem] rounded-[var(--radius)]" />}>
-                <PdfEditor bytes={gridBytes} onChange={setElements} />
-              </Suspense>
-            ) : null}
-
-            {PREVIEW_TOOLS.has(toolId) && files[0] ? (
-              <LivePreview file={files[0]} module={module} options={options} />
-            ) : null}
-
-            {files.length < maxFiles ? (
-              <Dropzone
-                accept={module?.accept ?? ['application/pdf']}
-                compact
-                hint={t('toolPage.addFilesHint')}
-                label={t('toolPage.addFiles')}
-                multiple
-                onFiles={select}
-              />
-            ) : null}
-
-            {warning ? <p className="text-sm text-danger">{warning}</p> : null}
-          </div>
-
-          <aside
-            className={cx(
-              'flex flex-col gap-5',
-              optionsPanel && 'lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)]',
+          <aside className="surface divide-y divide-[var(--separator)] lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)] lg:overflow-y-auto">
+            {stripSurface ? null : (
+              <section className="p-3">
+                <FileStrip compact files={files} onChange={setFiles} />
+              </section>
             )}
-          >
+
             {optionsPanel ? (
-              <Card className="lg:min-h-0 lg:overflow-y-auto">
-                <Card.Header>
-                  <Card.Title className="text-base font-semibold">{t('tool.options')}</Card.Title>
-                </Card.Header>
-                <Card.Content>
-                  <Suspense fallback={<Skeleton className="h-24 rounded-lg" />}>
-                    <OptionsPanel onChange={setOptions} value={options} />
-                  </Suspense>
-                </Card.Content>
-              </Card>
+              <section className={section}>
+                <h2 className={heading}>
+                  {t(`toolPage.optionsHeading.${toolId}`, { defaultValue: t('tool.options') })}
+                </h2>
+                <Suspense fallback={<Skeleton className="h-24 rounded-lg" />}>
+                  <OptionsPanel onChange={setOptions} value={options} />
+                </Suspense>
+              </section>
             ) : null}
 
-            <Card className="shrink-0">
+            <section className={section}>
+              {warning ? <p className="text-sm text-danger">{warning}</p> : null}
               {running ? (
                 <ProgressBar value={Math.round((progress?.value ?? 0) * 100)}>
                   <Label className="text-sm text-muted">{stageLabel}</Label>
@@ -406,11 +360,12 @@ export function ToolPage() {
               <div className="flex gap-2">
                 <Button
                   fullWidth
-                  isDisabled={!module}
+                  isDisabled={!module || needsSelection}
                   isPending={running}
                   onPress={() => void run()}
+                  variant={done ? 'outline' : 'primary'}
                 >
-                  {t('tool.run')}
+                  {done ? t('toolPage.runAgain') : t('tool.run')}
                 </Button>
                 {running ? (
                   <Button onPress={() => controller.current?.abort()} variant="ghost">
@@ -418,39 +373,117 @@ export function ToolPage() {
                   </Button>
                 ) : null}
               </div>
-            </Card>
 
-            {passwordFile ? (
-              <Card className="shrink-0">
+              {passwordFile ? (
                 <form
+                  className="space-y-3"
                   onSubmit={(event) => {
                     event.preventDefault()
                     void run(password)
                   }}
                 >
-                  <Card.Content className="space-y-3">
-                    <TextField
-                      autoFocus
-                      fullWidth
-                      onChange={setPassword}
-                      type="password"
-                      value={password}
-                    >
-                      <Label>{t('tool.password', { file: passwordFile })}</Label>
-                      <Input />
-                      <Description>{t('toolPage.passwordNote')}</Description>
-                    </TextField>
-                    <Button fullWidth type="submit">
-                      {t('tool.unlock')}
-                    </Button>
-                  </Card.Content>
+                  <TextField
+                    autoFocus
+                    fullWidth
+                    onChange={setPassword}
+                    type="password"
+                    value={password}
+                  >
+                    <Label>{t('tool.password', { file: passwordFile })}</Label>
+                    <Input />
+                    <Description>{t('toolPage.passwordNote')}</Description>
+                  </TextField>
+                  <Button fullWidth type="submit">
+                    {t('tool.unlock')}
+                  </Button>
                 </form>
-              </Card>
+              ) : null}
+
+              {error ? (
+                <Alert status="danger">
+                  <Alert.Indicator />
+                  <Alert.Content>
+                    <Alert.Title>{t('toolPage.errorTitle')}</Alert.Title>
+                    <Alert.Description>{error.message}</Alert.Description>
+                    <Disclosure className="mt-2">
+                      <Disclosure.Heading>
+                        <Disclosure.Trigger className="text-sm text-muted">
+                          {t('toolPage.errorDetail')}
+                          <Disclosure.Indicator />
+                        </Disclosure.Trigger>
+                      </Disclosure.Heading>
+                      <Disclosure.Content>
+                        <Disclosure.Body>
+                          <pre className="measure max-h-48 overflow-auto rounded-lg bg-ink/5 p-3 text-xs whitespace-pre-wrap dark:bg-paper/5">
+                            {error.detail}
+                          </pre>
+                          <Button className="mt-2" onPress={copyDetail} size="sm" variant="outline">
+                            {copied === 'done' ? (
+                              <Check aria-hidden="true" size={14} />
+                            ) : (
+                              <Copy aria-hidden="true" size={14} />
+                            )}
+                            {copied === 'done' ? t('toolPage.copied') : t('toolPage.copyDetail')}
+                          </Button>
+                          <p aria-live="polite" className="mt-1 text-xs text-muted">
+                            {copied === 'failed' ? t('toolPage.copyFailed') : ''}
+                          </p>
+                        </Disclosure.Body>
+                      </Disclosure.Content>
+                    </Disclosure>
+                  </Alert.Content>
+                </Alert>
+              ) : null}
+            </section>
+
+            {done ? (
+              <section className={section}>
+                <div>
+                  <h2 className={heading}>{t('tool.results')}</h2>
+                  <p className="text-sm text-muted">{t('tool.resultReady')}</p>
+                </div>
+                <dl className="grid grid-cols-2 gap-3">
+                  <Measure
+                    label={t('toolPage.before')}
+                    value={`${t('toolPage.fileCount', { count: files.length })} · ${formatBytes(totalIn)}`}
+                  />
+                  <Measure
+                    label={t('toolPage.after')}
+                    value={`${t('toolPage.fileCount', { count: outputs.length })} · ${formatBytes(totalOut)}`}
+                  />
+                </dl>
+                <ul
+                  aria-label={t('toolPage.outputs')}
+                  className="divide-y divide-[var(--separator)]"
+                >
+                  {outputs.map((output) => (
+                    <li
+                      className="flex items-center justify-between gap-3 py-1.5"
+                      key={output.name}
+                    >
+                      <span className="truncate text-sm" title={output.name}>
+                        {output.name}
+                      </span>
+                      <span className="measure shrink-0 text-xs text-muted">
+                        {formatBytes(output.bytes.byteLength)}
+                      </span>
+                    </li>
+                  ))}
+                </ul>
+                <div className="space-y-2">
+                  <Button fullWidth onPress={download}>
+                    {t('tool.download')}
+                  </Button>
+                  <Button fullWidth onPress={startOver} variant="ghost">
+                    {t('tool.startOver')}
+                  </Button>
+                </div>
+              </section>
             ) : null}
           </aside>
         </div>
       ) : (
-        <section className="mt-10">
+        <section className="mt-6">
           <div className="hero-grid grid-fade rounded-[var(--radius)]">
             <Dropzone
               accept={module?.accept ?? ['application/pdf']}
@@ -483,8 +516,8 @@ export function ToolPage() {
 function Measure({ label, value }: { label: string; value: string }) {
   return (
     <div>
-      <dt className="text-sm text-muted">{label}</dt>
-      <dd className="measure mt-1 text-lg">{value}</dd>
+      <dt className="text-xs text-muted">{label}</dt>
+      <dd className="measure text-sm">{value}</dd>
     </div>
   )
 }

@@ -1,19 +1,16 @@
 import type { ExtractPagesOptions } from '@fuckpdf/tools'
-import { Input, Label, Switch, TextField } from '@fuckpdf/ui'
+import { Label, Switch } from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
+// No page field: ToolPage overwrites `pages` with the grid selection on run.
 export default function ExtractPagesOptionsPanel({ value, onChange }: OptionsPanelProps) {
   const { t } = useTranslation()
   const options = value as ExtractPagesOptions
 
   return (
     <div className="flex flex-col gap-4">
-      <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
-        <Label>{t('options.extract-pages.pages')}</Label>
-        <Input />
-      </TextField>
-
+      <p className="text-sm text-muted">{t('options.pickHint')}</p>
       <Switch
         isSelected={options.split ?? false}
         onChange={(split) => onChange({ ...options, split })}
