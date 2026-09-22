@@ -12,13 +12,8 @@ import {
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
-/**
- * Nine standalone `ToggleButton`s rather than a `ToggleButtonGroup`: React Aria's group
- * turns single-select children into `role="radio"` and deletes their `aria-pressed`, and
- * the group itself becomes `role="radiogroup"`. The picker's contract — a `group` named
- * "Position" holding nine pressable buttons — is what the e2e suite asserts, so the
- * grouping stays a real `<fieldset>`/`<legend>` and the buttons stay buttons.
- */
+/** Standalone toggles, not a `ToggleButtonGroup`: React Aria's group would turn these
+ * into radios and delete `aria-pressed`, which is what the e2e suite asserts on. */
 const POSITIONS: { id: PositionAnchor; align: string }[] = [
   { id: 'top-left', align: 'items-start justify-start' },
   { id: 'top-center', align: 'items-start justify-center' },
@@ -48,8 +43,8 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
     <div className="flex flex-col gap-4">
       <Fieldset>
         <Fieldset.Legend>{t('options.page-numbers.position')}</Fieldset.Legend>
-        {/* Squared off on purpose: each button is a miniature page, and a circle has no
-            corners for the dot to sit in, which makes "top left" unreadable. */}
+        {/* Squared off: each button is a miniature page, and a circle has no corners for
+            the dot to sit in. */}
         <div className="grid w-fit grid-cols-3 gap-1">
           {POSITIONS.map((pos) => (
             <ToggleButton
@@ -60,9 +55,8 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
               key={pos.id}
               onChange={() => onChange({ ...options, position: pos.id })}
             >
-              {/* Not `bg-current`: HeroUI's selected foreground is the accent mixed toward
-                  ink, which comes out quieter than the unselected ink dots and makes the
-                  selection read backwards. The selected dot has to be the loudest one. */}
+              {/* Not `bg-current`: HeroUI's selected foreground is quieter than the
+                  unselected dots, which makes the selection read backwards. */}
               <span
                 aria-hidden="true"
                 className={`size-1.5 rounded-full ${
@@ -139,7 +133,6 @@ export default function PageNumbersOptionsPanel({ value, onChange }: OptionsPane
         <Label>{t('options.page-numbers.color')}</Label>
         <div className="flex items-center gap-2">
           <Input className="measure" />
-          {/* The native colour input is the platform's picker; nothing here rebuilds one. */}
           <input
             aria-label={t('options.page-numbers.colorSwatch')}
             className="size-9 shrink-0 cursor-pointer rounded-[var(--radius)] border border-[var(--border)] bg-transparent"

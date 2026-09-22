@@ -37,7 +37,7 @@ test('crop flatten mocked engine', async () => {
   }
   const p = await PDFDocument.create()
   p.addPage()
-  // It throws error because flatten crop isn't fully implemented without encoding
+  // Flatten is unimplemented: it renders the page and then throws.
   await expect(
     run([{ name: '1.pdf', bytes: await p.save() }], {
       box: { x: 0, y: 0, width: 50, height: 50 },

@@ -75,8 +75,7 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
           <Input />
         </TextField>
       ) : (
-        // A file picker has no HeroUI field; the native input is the platform's answer and
-        // its own <label> is what names it.
+        // A file picker has no HeroUI field; its own <label> is what names the input.
         <label className="flex flex-col gap-1 text-sm font-medium">
           {t('options.watermark.image')}
           <input
@@ -111,7 +110,6 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
       </Fieldset>
 
       {mode === 'positioned' && (
-        /* Five anchors is past the point where segments stay readable on a narrow panel. */
         <Select
           onChange={(key) =>
             onChange({
@@ -204,7 +202,6 @@ export default function WatermarkOptionsPanel({ value, onChange }: OptionsPanelP
             <Label>{t('options.watermark.color')}</Label>
             <div className="flex items-center gap-2">
               <Input className="measure" />
-              {/* The native colour input is the platform's picker; nothing here rebuilds one. */}
               <input
                 aria-label={t('options.watermark.colorSwatch')}
                 className="size-9 shrink-0 cursor-pointer rounded-[var(--radius)] border border-[var(--border)] bg-transparent"

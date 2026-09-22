@@ -1,36 +1,25 @@
-/**
- * Thumbnail supply for the grid: one open document for the whole grid, renders in the
- * worker, capped in flight, refcounted per source page and released when the last cell
- * using it goes away (PRD NFR-3).
- *
- * Cells subscribe per page rather than reading a state object, so one finished render
- * re-renders one cell instead of all three hundred.
- */
+// Cells subscribe per page rather than to one state object, so a finished render
+// re-renders one cell instead of three hundred.
 import { useEffect, useMemo } from 'react'
 import { openPdf, type PdfDocument } from '../../workers/pdfium-client'
 import type { Size } from './crop'
 import { createLimiter } from './limit'
 
-/**
- * Renders in flight at once. One worker decodes one page at a time anyway; a few queued
- * keep it fed across the message round-trip without holding a screenful of decoded pages
- * the user already scrolled past.
- */
+/** The worker decodes one at a time; a few queued keep it fed across the round-trip. */
 export const MAX_RENDERS_IN_FLIGHT = 4
 
-/** Small enough that a page is well under the 100 ms/page budget (PRD NFR-2), large
- * enough for a 2x cell. */
+/** Under the 100 ms/page budget, still sharp on a 2x cell. */
 const THUMBNAIL_DPI = 36
 
 export type Thumbnail = {
   url?: string
-  /** Page size in PDF points, needed to report a crop rectangle. */
+  /** PDF points. Needed to report a crop rectangle. */
   size?: Size
   error?: Error
 }
 
 export type ThumbnailStore = {
-  /** Start (or join) the render for a source page. Call the result to let it go. */
+  /** Starts or joins the render. Call the result to release it. */
   acquire(sourceIndex: number): () => void
   get(sourceIndex: number): Thumbnail | undefined
   subscribe(sourceIndex: number, listener: () => void): () => void
@@ -51,8 +40,7 @@ const createStore = (bytes: Uint8Array, password?: string): ThumbnailStore & { r
   const entries = new Map<number, Entry>()
   let doc: Promise<PdfDocument> | undefined
 
-  // A copy: `openPdf` detaches what it is given and the caller still owns `bytes` — it
-  // is the same buffer the tool step will run on.
+  // A copy: `openPdf` detaches what it is given, and `bytes` is what the step will run on.
   const open = () => {
     doc ??= openPdf(bytes.slice().buffer as ArrayBuffer, password)
     return doc
@@ -64,7 +52,7 @@ const createStore = (bytes: Uint8Array, password?: string): ThumbnailStore & { r
 
   const settle = (entry: Entry, state: Thumbnail) => {
     if (entry.refs <= 0) {
-      // Scrolled away while rendering: nothing will show this, so do not leak it.
+      // Scrolled away mid-render: nothing will show this URL.
       if (state.url) URL.revokeObjectURL(state.url)
       return
     }
@@ -87,7 +75,7 @@ const createStore = (bytes: Uint8Array, password?: string): ThumbnailStore & { r
     }).catch((caught) => settle(entry, { error: asError(caught) }))
   }
 
-  // The entry itself stays in the map because cells subscribe to it; only the pixels go.
+  // The entry stays in the map because cells subscribe to it; only the pixels go.
   const drop = (entry: Entry) => {
     if (entry.state?.url) URL.revokeObjectURL(entry.state.url)
     entry.state = undefined
@@ -124,8 +112,7 @@ const createStore = (bytes: Uint8Array, password?: string): ThumbnailStore & { r
       }
     },
 
-    /** Drops every object URL and closes the document. The store re-opens lazily if it is
-     * used again, which is what React's double-invoked effects in dev need. */
+    /** Re-opens lazily if used again, which is what dev's double-invoked effects need. */
     reset() {
       for (const entry of entries.values()) drop(entry)
       const closing = doc

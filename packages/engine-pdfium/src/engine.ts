@@ -7,22 +7,19 @@ import {
   type RenderOptions,
 } from './types'
 
-/** Supplies the wasm bytes. Never a URL the engine picks: zero egress means the caller
- * decides where the binary comes from, and in the browser that is our own origin. */
+/** The caller decides where the binary comes from; the engine never fetches a URL. */
 export type WasmSource = BufferSource | (() => Promise<BufferSource>)
 
 const FPDF_ERR_PASSWORD = 4
 const FPDFBitmap_BGRA = 4
-/** Render annotation appearances, like every other viewer does. */
 const FPDF_ANNOT = 0x01
 const POINTS_PER_INCH = 72
 
-/** `PdfiumModule` resolves to `{}` here (its `@types/emscripten` base is not installed),
- * so the two runtime bits we need are re-declared instead of cast away with `any`. */
+/** `PdfiumModule` resolves to `{}` without `@types/emscripten`, so redeclare what we call. */
 type Heap = { HEAPU8: Uint8Array }
 type ModuleOverrides = Partial<PdfiumModule> & { wasmBinary: BufferSource }
 
-/** Re-read on every use: the heap is replaced whenever wasm memory grows. */
+// Re-read on every use: the heap is replaced whenever wasm memory grows.
 const heap = (mod: WrappedPdfiumModule): Uint8Array => (mod.pdfium as unknown as Heap).HEAPU8
 
 const malloc = (mod: WrappedPdfiumModule, size: number): number => {
@@ -63,7 +60,6 @@ function openDocument(
     }
   }
 
-  /** Loads a page, runs `fn`, closes the page even when `fn` throws. */
   const withPage = <T>(page: number, fn: (pagePtr: number) => T): T => {
     assertPage(page)
     const pagePtr = mod.FPDF_LoadPage(docPtr, page - 1)
@@ -100,7 +96,6 @@ function openDocument(
           throw new Error(`PDFium could not allocate a ${width}x${height} bitmap`)
         }
         try {
-          // White, opaque: a PDF page is paper, not a transparent layer.
           mod.FPDFBitmap_FillRect(bitmap, 0, 0, width, height, 0xffffffff)
           mod.FPDF_RenderPageBitmap(bitmap, pagePtr, 0, 0, width, height, 0, FPDF_ANNOT)
 
@@ -149,10 +144,6 @@ function openDocument(
   }
 }
 
-/**
- * The wasm module is instantiated at most once per engine and reused. `wasm` is only
- * touched on the first `open()`, so importing this module costs nothing.
- */
 export function createPdfiumEngine(wasm: WasmSource): PdfiumEngine {
   let modulePromise: Promise<WrappedPdfiumModule> | undefined
 

@@ -20,7 +20,7 @@ export type PageNumbersOptions = {
   format: string // e.g. "Page {n} of {total}"
   font: 'Helvetica' | 'Times-Roman'
   size: number
-  /** Hex color without #, e.g. "000000" */
+  /** `rrggbb`, no leading `#`. */
   color: string
   margin: number
 }

@@ -1,10 +1,7 @@
 /// <reference lib="webworker" />
 
-/**
- * The only place PDF bytes are decoded (AGENTS.md invariant 3). Documents are kept open
- * here and addressed by id, so a page grid transfers its bytes once instead of once per
- * page (PRD NFR-3).
- */
+// Documents stay open here and are addressed by id, so a grid transfers its bytes once
+// rather than once per page.
 import { createPdfiumEngine, type PdfiumDocument } from '@fuckpdf/engine-pdfium'
 import { loadPdfiumWasm } from '@fuckpdf/engine-pdfium/wasm'
 import * as Comlink from 'comlink'
@@ -19,8 +16,7 @@ const get = (id: number): PdfiumDocument => {
   return doc
 }
 
-/** `render` hands back a freshly allocated buffer it no longer references, so the bytes
- * can be transferred instead of copied. */
+/** The buffer is freshly allocated and unreferenced, so it can be transferred. */
 const pixels = async (id: number, page: number, dpi: number) => {
   const { width, height, data } = await get(id).render({ page, dpi })
   return { width, height, buffer: data.buffer as ArrayBuffer }
@@ -32,7 +28,7 @@ const MIME: Record<string, string | undefined> = {
   webp: 'image/webp',
 }
 
-/** OffscreenCanvas is the only encoder a worker has; `quality` is ignored for PNG. */
+/** OffscreenCanvas is the only encoder a worker has. PNG ignores `quality`. */
 const toBlob = async (
   rgba: ArrayBuffer,
   width: number,
@@ -68,22 +64,18 @@ const api = {
     return get(id).extractText(page)
   },
 
-  /** Raw RGBA. */
   async render(id: number, page: number, dpi: number) {
     const { width, height, buffer } = await pixels(id, page, dpi)
     return Comlink.transfer({ width, height, buffer }, [buffer])
   },
 
-  /** PNG, ready for `URL.createObjectURL` in an `<img>`. Encoding stays off the main
-   * thread; the Blob itself crosses by reference, not by copy. */
+  /** PNG. The Blob crosses by reference, not by copy. */
   async thumbnail(id: number, page: number, dpi: number): Promise<Blob> {
     const { width, height, buffer } = await pixels(id, page, dpi)
     return toBlob(buffer, width, height, 'image/png')
   },
 
-  /** RGBA in, encoded image bytes out. Lives here so `packages/tools` can stay DOM-free
-   * (AGENTS.md invariant 5) and pixels never reach the main thread (invariant 3):
-   * `pdf-to-jpg` and crop's flatten path both take this as their `encode` option. */
+  /** Lives here so `packages/tools` stays DOM-free and pixels never reach the main thread. */
   async encode(
     rgba: ArrayBuffer,
     width: number,

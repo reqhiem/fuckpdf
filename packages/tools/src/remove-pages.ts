@@ -2,7 +2,7 @@ import type { Output, PdfInput, RunContext, ToolStep } from './types'
 import { checkCancel, generateOutputName, loadPdf, parsePageRange } from './utils'
 
 export type RemovePagesOptions = {
-  /** Page selection string, e.g. "1-5, 8" */
+  /** 1-based, e.g. `"1-5, 8"`. */
   pages: string
 }
 
@@ -24,7 +24,7 @@ export const run: ToolStep<Record<string, unknown>> = async (
   const totalPages = pdf.getPageCount()
   const toRemove = new Set(parsePageRange(options.pages, totalPages))
 
-  // Remove in reverse order so indices don't shift
+  // Reverse order: removing a page shifts every index after it.
   for (let i = totalPages - 1; i >= 0; i--) {
     checkCancel(ctx)
     if (toRemove.has(i)) {

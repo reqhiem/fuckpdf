@@ -7,7 +7,6 @@ export default function RemovePagesOptionsPanel({ value, onChange }: OptionsPane
   const { t } = useTranslation()
   const options = value as RemovePagesOptions
 
-  // The label already carries the range syntax, so it needs no Description under it.
   return (
     <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
       <Label>{t('options.remove-pages.pages')}</Label>

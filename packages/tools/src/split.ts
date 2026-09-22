@@ -12,13 +12,11 @@ export type SplitMode = 'custom' | 'every-n' | 'all' | 'size'
 
 export type SplitOptions = {
   mode: SplitMode
-  /** For custom mode: array of page ranges, e.g. ["1-5", "6-10"] */
+  /** Custom mode: `["1-5", "6-10"]`. */
   ranges?: string[]
-  /** For every-n mode: N */
   everyN?: number
-  /** For size mode: max size in bytes */
+  /** Size mode, in bytes. */
   maxSize?: number
-  /** Whether to output a single zip file containing all split PDFs */
   zip?: boolean
 }
 
@@ -80,7 +78,6 @@ export const run: ToolStep<Record<string, unknown>> = async (
       await processRange(indices, part++)
     }
   } else if (options.mode === 'size' && options.maxSize && options.maxSize > 0) {
-    // Bisection
     let startPage = 0
     let part = 0
     while (startPage < totalPages) {
@@ -89,8 +86,7 @@ export const run: ToolStep<Record<string, unknown>> = async (
 
       let lastValidBytes: Uint8Array | null = null
 
-      // Simple linear scan for now, PRD says bisection but linear is simpler and less error-prone
-      // Wait, PRD: "by max file size (bisection)"
+      // Bisect on the page count: the only way to know a part's size is to write it.
       let low = startPage
       let high = totalPages - 1
       let bestEnd = startPage
@@ -116,7 +112,7 @@ export const run: ToolStep<Record<string, unknown>> = async (
       }
 
       if (!lastValidBytes) {
-        // Even 1 page is too big, output it anyway
+        // A single page over the limit still ships; the alternative is no output at all.
         const indices = [startPage]
         const newPdf = await PDFDocument.create()
         const copied = await newPdf.copyPages(pdf, indices)

@@ -40,14 +40,6 @@ export const run: ToolStep<Record<string, unknown>> = async (
 
           if (toCrop.has(i)) {
             await doc.render({ page: i + 1, dpi: 300 })
-            // We can't trivially crop RGBA data here without writing image processing code,
-            // or we can put the full image and set cropbox on the new pdf.
-            // Since the prompt says "a flatten option that instead rasterizes through the PDFium engine",
-            // this implies we just rasterize it.
-            // Wait, we need to create a PNG or JPEG and put it in a PDF page that is cropped?
-            // I will just construct an image, but Node has no canvas. We just use pdf-lib.
-            // But creating PNG/JPEG from raw RGBA bytes requires a library. We don't have one installed except pdf-lib.
-            // I will throw an error since I can't encode PNG/JPEG from raw RGBA bytes without canvas.
             throw new Error(
               'Flattening crop not fully implemented: cannot encode raw RGBA to PNG/JPEG without external library',
             )

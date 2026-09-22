@@ -10,9 +10,8 @@ import {
 } from './utils'
 
 export type ExtractPagesOptions = {
-  /** Page selection string, e.g. "1-5, 8" */
+  /** 1-based, e.g. `"1-5, 8"`. */
   pages: string
-  /** If true, each extracted page becomes its own file in a zip */
   split?: boolean
 }
 

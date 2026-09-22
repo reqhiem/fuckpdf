@@ -4,9 +4,7 @@ import { checkCancel, generateOutputName, loadPdf, parsePageRange } from './util
 
 export type WatermarkOptions = {
   type: 'text' | 'image'
-  /** For text watermark */
   text?: string
-  /** For image watermark: uint8array of image bytes */
   imageBytes?: Uint8Array
   imageMime?: string
 
@@ -18,7 +16,6 @@ export type WatermarkOptions = {
   layer: 'over' | 'under'
   pages?: string
 
-  /** Text options */
   color?: string // hex
   size?: number
 }

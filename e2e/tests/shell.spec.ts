@@ -16,15 +16,8 @@ test('the shell exposes tools and opens a tool dropzone', async ({ page }) => {
   ).toBeVisible()
 })
 
-/**
- * The picker is nine buttons whose only visible content is a positioning dot, so its
- * accessible name has to come from a label. It shipped without one once, which made every
- * anchor nameless and stateless to a screen reader.
- *
- * A file is uploaded first because the options panel only renders once there is something
- * to run against: every tool runs on its defaults, so an empty tool page shows the
- * dropzone rather than a form for a file that does not exist yet.
- */
+/** The nine anchors show only a dot, so their names come from labels; this shipped
+ * nameless once. A file is uploaded first because an empty tool page has no options. */
 test('the page-numbers position picker is reachable by name', async ({ page }) => {
   await openTool(page, 'page-numbers', 'Page numbers')
   await upload(page, [pdfFile('one.pdf', await createPagedPdf([200]))])

@@ -49,6 +49,9 @@ i18next + react-i18next · dnd-kit · fflate · Comlink · Vitest · Playwright 
 - Errors: human sentence + copyable technical detail. Nothing is reported anywhere.
 - Destructive confirmations (redact, delete pages) are written plainly. No jokes there.
 - Never name the product being parodied in code, copy, or markup.
+- Comments only when strictly necessary. No docblock on every module, no comment restating
+  what the line already says. Write one when the code cannot carry it: a non-obvious
+  constraint, a browser quirk, a reason a value must not change. Otherwise rename the thing.
 
 ## Checks
 

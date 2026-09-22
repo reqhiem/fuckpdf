@@ -6,7 +6,7 @@ export type PdfToJpgOptions = {
   engine: PdfiumEngine
   dpi: number
   format: 'jpeg' | 'png' | 'webp'
-  /** Shell injects this since we can't use DOM/globals to encode RGBA. For tests, can be mock. */
+  /** Injected by the shell: encoding needs a canvas, and this package may not touch the DOM. */
   encode?: (rgba: Uint8Array, width: number, height: number, format: string) => Promise<Uint8Array>
 }
 

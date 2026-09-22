@@ -21,16 +21,10 @@ if (entryAssets.length === 0) {
   process.exit(1)
 }
 
-/**
- * Engine code is detected by a symbol only the engine itself defines, not by its package
- * name. The name appears legitimately in shell copy — the privacy section names PDFium and
- * pdf-lib in prose, and the licence section names them again — so matching the string
- * `pdf-lib` in the bundle fails on an app that is behaving correctly.
- */
+// Detected by a symbol, not by the package name: the shell's privacy copy names PDFium
+// and pdf-lib in prose, so a name match fails on an app behaving correctly.
 const ENGINE_SYMBOLS = [
-  // pdf-lib's main export. Present in the pdf-lib chunk, absent everywhere else.
   { symbol: 'PDFDocument', engine: 'pdf-lib' },
-  // Every PDFium wasm binding is prefixed this way.
   { symbol: 'FPDF_', engine: 'PDFium' },
 ]
 
@@ -51,7 +45,7 @@ for (const asset of entryAssets) {
   }
 }
 
-// The sum, not each asset: what matters is everything the browser must fetch to boot.
+// The sum, not each asset: what matters is everything the browser fetches to boot.
 if (total >= budget) {
   console.error(
     `Bundle budget failed: the shell is ${total} B gzip across ${entryAssets.length} asset(s) (limit ${budget} B; set SHELL_BUDGET_BYTES to override)`,

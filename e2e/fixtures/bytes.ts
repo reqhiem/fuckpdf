@@ -1,14 +1,7 @@
-/**
- * Byte-level readers for the things a tool downloads that are not PDFs: the zip bundle,
- * and the PNG this suite feeds to jpg-to-pdf.
- *
- * Both are hand-rolled against `node:zlib` on purpose. e2e only depends on Playwright and
- * pdf-lib, and a test suite that asserts on bytes should not borrow the app's own zip
- * writer to check the app's zip output.
- */
+// Hand-rolled on purpose: a suite asserting on bytes must not borrow the app's own zip
+// writer to check the app's zip output.
 import { crc32, deflateSync, inflateRawSync } from 'node:zlib'
 
-/** Entries of a zip, by name. Handles the two methods fflate's `zipSync` emits. */
 export function unzip(archive: Buffer): Record<string, Buffer> {
   const eocd = archive.lastIndexOf(Buffer.from([0x50, 0x4b, 0x05, 0x06]))
   if (eocd < 0) throw new Error('not a zip: no end-of-central-directory record')
@@ -26,8 +19,8 @@ export function unzip(archive: Buffer): Record<string, Buffer> {
     const localHeader = archive.readUInt32LE(record + 42)
     const name = archive.toString('utf8', record + 46, record + 46 + nameLength)
 
-    // The local header repeats the name and carries its own extra field, so the payload
-    // offset can only be read there, never derived from the central directory.
+    // The local header carries its own extra field, so the payload offset can only be
+    // read there, never derived from the central directory.
     const start =
       localHeader +
       30 +
@@ -50,7 +43,7 @@ const chunk = (type: string, data: Buffer): Buffer => {
   return Buffer.concat([head, tagged, tail])
 }
 
-/** A real 8-bit RGB PNG with a gradient, so jpg-to-pdf has an image pdf-lib will embed. */
+/** A real 8-bit RGB PNG, so jpg-to-pdf has an image pdf-lib will embed. */
 export function createPng(width: number, height: number): Buffer {
   const header = Buffer.from([0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a])
 
@@ -79,7 +72,6 @@ export function createPng(width: number, height: number): Buffer {
   ])
 }
 
-/** First bytes of the formats pdf-to-jpg can emit. */
 export const MAGIC: Record<string, number[]> = {
   png: [0x89, 0x50, 0x4e, 0x47],
   jpeg: [0xff, 0xd8, 0xff],

@@ -7,7 +7,6 @@ export type OrganizeOp =
   | { type: 'blank'; width?: number; height?: number }
 
 export type OrganizeOptions = {
-  /** Ordered list of pages to include in the output */
   operations: OrganizeOp[]
 }
 

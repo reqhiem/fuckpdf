@@ -5,7 +5,6 @@ import { createPdfiumEngine } from './engine'
 
 const MARKER = 'fuckpdf-fixture'
 
-// Served from our own origin in the browser (see ./wasm.ts); read off disk under Node.
 const engine = createPdfiumEngine(() =>
   readFile(new URL('../node_modules/@embedpdf/pdfium/dist/pdfium.wasm', import.meta.url)),
 )

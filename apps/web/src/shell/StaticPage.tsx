@@ -2,7 +2,6 @@ import { useTranslation } from 'react-i18next'
 
 type Page = 'privacy' | 'about' | 'licenses'
 
-/** Section order per page. The prose itself lives in the catalog, like every other string. */
 const sections: Record<Page, string[]> = {
   about: ['why', 'how', 'scope'],
   licenses: ['app', 'engines', 'fonts'],
@@ -13,7 +12,6 @@ export function StaticPage({ page }: { page: Page }) {
   const { t } = useTranslation()
   return (
     <article className="mx-auto max-w-6xl px-6 py-16">
-      {/* 68ch: inside the 65 to 75ch measure DESIGN.md caps prose at. */}
       <div className="max-w-[68ch]">
         <h1 className="text-4xl font-bold tracking-[-0.03em] sm:text-5xl">{t(`${page}.title`)}</h1>
         <p className="mt-6 text-lg leading-8">{t(`${page}.lead`)}</p>

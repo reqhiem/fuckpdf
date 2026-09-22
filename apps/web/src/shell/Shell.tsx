@@ -26,7 +26,6 @@ export function Shell() {
   }
   return (
     <div className="flex min-h-dvh flex-col">
-      {/* Not sticky: a sticky bar would end up over a tool's option fields. */}
       <header className="hairline border-b">
         <div className="mx-auto flex max-w-6xl items-center justify-between px-6 py-4">
           <Link aria-label={t('nav.home')} className="text-xl font-bold tracking-[-0.04em]" to="/">

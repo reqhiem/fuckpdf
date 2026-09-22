@@ -1,11 +1,3 @@
-/**
- * The page grid (PRD §3). Organize, remove-pages, extract-pages and crop all render this
- * and differ only in `capabilities` — the component itself has no idea which tool it is
- * standing in.
- *
- * Thumbnails come from the PDFium worker (AGENTS.md invariant 3); this file only ever
- * holds object URLs and page numbers.
- */
 import {
   type Announcements,
   closestCenter,
@@ -32,20 +24,14 @@ import { PageCell, type SelectModifiers } from './page-cell'
 import type { PageGridCapabilities, PageGridProps, PageRef } from './types'
 import { useThumbnails } from './use-thumbnails'
 
-/** The grid's crop rectangle: one page at a time, reported in PDF points. */
 export type PageGridCrop = { pageId: string; rect: CropRect }
 
-/**
- * Crop is not in the frozen `PageGridProps` contract, so it rides alongside it: passing
- * `onCropChange` is what turns the overlay on, and a caller that knows nothing about crop
- * is unaffected.
- */
+/** Separate from `PageGridProps`: passing `onCropChange` is what turns the overlay on. */
 export type PageGridCropProps = {
   crop?: PageGridCrop | null
   onCropChange?: (crop: PageGridCrop | null) => void
 }
 
-/** Everything on unless a tool says otherwise — a grid with no capabilities is a picture. */
 const DEFAULT_CAPABILITIES: Required<PageGridCapabilities> = {
   reorder: true,
   select: true,
@@ -125,7 +111,6 @@ export function PageGrid({
       onSelectedChange(next)
       return
     }
-    // A plain click on the only selected page clears it; otherwise it selects just that one.
     onSelectedChange(next.size === 1 && next.has(id) ? new Set() : new Set([id]))
   }
 

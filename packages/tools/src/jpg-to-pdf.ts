@@ -6,7 +6,6 @@ export type JpgToPdfOptions = {
   pageSize: 'A4' | 'Letter' | 'fit-image'
   orientation: 'portrait' | 'landscape'
   margin: number
-  /** fit mode when page size is fixed */
   fitMode: 'contain' | 'cover' | 'fill'
 }
 

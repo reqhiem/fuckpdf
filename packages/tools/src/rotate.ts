@@ -3,9 +3,8 @@ import type { Output, PdfInput, RunContext, ToolStep } from './types'
 import { checkCancel, generateOutputName, loadPdf, parsePageRange } from './utils'
 
 export type RotateOptions = {
-  /** Rotation angle in degrees: 90, 180, or 270 */
   angle: number
-  /** Page selection string, e.g. "1-5, 8". Empty means all pages. */
+  /** 1-based, e.g. `"1-5, 8"`. Empty means every page. */
   pages?: string
 }
 

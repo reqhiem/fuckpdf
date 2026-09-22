@@ -9,9 +9,9 @@ import {
 import { checkCancel, generateOutputName, loadPdf, parsePageRange } from './utils'
 
 export type MergeOptions = {
-  /** Array of original file names specifying the order. Missing files are ignored. */
+  /** File names in output order. A name that is not among the inputs is ignored. */
   order?: string[]
-  /** Map of file name to page range (1-based, e.g. "1-5, 8"). Empty means all pages. */
+  /** File name to 1-based page range. Absent means every page. */
   ranges?: Record<string, string>
 }
 

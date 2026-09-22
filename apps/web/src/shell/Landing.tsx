@@ -7,7 +7,6 @@ import { Link } from 'react-router'
 import { groups, toolCount } from './groups'
 import { ToolCard } from './ToolCard'
 
-/** The claim is checkable, so it gets three checks rather than a lock icon. */
 const proof = [
   { icon: Cpu, key: 'engine' },
   { icon: Network, key: 'network' },
@@ -18,7 +17,6 @@ export function Landing() {
   const { t } = useTranslation()
   const [query, setQuery] = useState('')
   const needle = query.trim().toLowerCase()
-  // Name *and* description: someone looking for "reorder" wants Organize.
   const matches = (id: ToolId) =>
     !needle ||
     `${t(`tools.${id}.name`)} ${t(`tools.${id}.description`)}`.toLowerCase().includes(needle)
@@ -80,7 +78,6 @@ export function Landing() {
             {t('proof.title')}
           </h2>
           <p className="mt-3 max-w-[68ch] leading-7 text-muted">{t('proof.lead')}</p>
-          {/* A spec list, stacked: label column, description column. Not three cards. */}
           <ul className="mt-8">
             {proof.map(({ icon: Icon, key }) => (
               <li className="hairline flex gap-4 border-t py-5 last:pb-0" key={key}>

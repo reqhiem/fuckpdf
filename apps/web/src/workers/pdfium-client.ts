@@ -1,11 +1,5 @@
-/**
- * Main-thread handle on the PDFium worker. The worker is spawned on first use, so the
- * shell never pays for it, and PDF bytes are transferred rather than cloned (PRD NFR-3):
- * `open` detaches the ArrayBuffer you hand it.
- *
- * Nothing runtime from `@fuckpdf/engine-pdfium` may be imported here — that would drag
- * the wasm glue into the shell bundle (AGENTS.md invariant 6). Types only.
- */
+// Types only from `@fuckpdf/engine-pdfium`: a runtime import drags the wasm glue into
+// the shell bundle.
 import * as Comlink from 'comlink'
 import type { PdfiumWorkerApi } from './pdfium.worker'
 
@@ -22,17 +16,16 @@ export type PdfPage = { width: number; height: number; data: Uint8Array }
 
 export type PdfDocument = {
   readonly pageCount: number
-  /** Page size in PDF points. */
+  /** PDF points. */
   pageSize(page: number): Promise<{ width: number; height: number }>
-  /** Raw RGBA pixels, `width * height * 4` bytes. */
+  /** RGBA, `width * height * 4` bytes. */
   render(page: number, dpi: number): Promise<PdfPage>
-  /** PNG for an `<img>`, rendered at `dpi`. */
   thumbnail(page: number, dpi: number): Promise<Blob>
   extractText(page: number): Promise<string>
   close(): Promise<void>
 }
 
-/** Takes ownership of `bytes`: the ArrayBuffer is detached. Close the result. */
+/** Detaches `bytes`. Close the result. */
 export async function openPdf(bytes: ArrayBuffer, password?: string): Promise<PdfDocument> {
   const api = worker()
   const { id, pageCount } = await api.open(Comlink.transfer(bytes, [bytes]), password)
@@ -50,7 +43,6 @@ export async function openPdf(bytes: ArrayBuffer, password?: string): Promise<Pd
   }
 }
 
-/** Opens, runs, and closes even when `fn` throws. */
 export async function withPdf<T>(
   bytes: ArrayBuffer,
   fn: (doc: PdfDocument) => Promise<T>,
@@ -64,7 +56,7 @@ export async function withPdf<T>(
   }
 }
 
-/** One-shot thumbnail. Detaches `bytes`; for a whole grid keep one `openPdf` handle. */
+/** Detaches `bytes`. For a whole grid keep one `openPdf` handle instead. */
 export function renderThumbnail(
   bytes: ArrayBuffer,
   page: number,
@@ -74,23 +66,14 @@ export function renderThumbnail(
   return withPdf(bytes, (doc) => doc.thumbnail(page, dpi), password)
 }
 
-/** Transfers when the view owns its whole buffer, copies when it is a slice of a bigger
- * one — transferring that would detach bytes the caller still needs. */
+/** Copies a slice rather than transferring it: the caller still owns the wider buffer. */
 const ownBuffer = (bytes: Uint8Array): ArrayBuffer =>
   bytes.byteOffset === 0 && bytes.byteLength === bytes.buffer.byteLength
     ? (bytes.buffer as ArrayBuffer)
     : (bytes.slice().buffer as ArrayBuffer)
 
-/**
- * RGBA pixels → JPEG, PNG or WebP bytes, encoded in the worker via OffscreenCanvas.
- *
- * Shaped to be handed straight to a tool step: `format` is a plain `string` (unknown
- * values throw) because that is what `pdf-to-jpg`'s optional `encode` option declares,
- * and crop's flatten path takes the same. `quality` is optional and PNG ignores it.
- *
- * Detaches `rgba` when it owns its buffer — it is the render output, nobody reads it
- * twice, and copying a page of pixels for nothing is what NFR-3 is about.
- */
+/** Detaches `rgba` when it owns its buffer. `format` is a plain string because that is
+ * what a tool step's `encode` option declares; an unknown one throws. */
 export async function encode(
   rgba: Uint8Array,
   width: number,
@@ -109,7 +92,6 @@ export async function encode(
   return new Uint8Array(encoded)
 }
 
-/** Comlink rebuilds a plain `Error` across the boundary, so the class is gone but the
- * name survives. Matches `PdfiumPasswordError` — the prompt-for-password case (FR-5). */
+/** Comlink rebuilds a plain `Error` across the boundary: the class is gone, the name survives. */
 export const isPasswordError = (error: unknown): boolean =>
   error instanceof Error && error.name === 'PdfiumPasswordError'

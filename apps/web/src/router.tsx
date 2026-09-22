@@ -4,7 +4,7 @@ import { Landing } from './shell/Landing'
 import { Shell } from './shell/Shell'
 import { StaticPage } from './shell/StaticPage'
 
-/** One route per tool id (PRD §7). The tool page itself is lazy so it stays out of the shell. */
+// The tool page is lazy so it stays out of the shell bundle.
 export const router = createBrowserRouter([
   {
     element: <Shell />,

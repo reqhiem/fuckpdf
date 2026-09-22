@@ -1,14 +1,7 @@
 import { defineConfig, devices } from '@playwright/test'
 
-/**
- * The per-tool suite runs on Chromium only.
- *
- * What it asserts is the bytes a tool produces, and those come out of wasm engines and
- * pure steps that are identical in every browser — so running it three times would triple
- * a slow suite for no new coverage. What genuinely differs per browser is the shell:
- * routing, the dropzone, downloads and the zero-egress guarantee. Those specs keep running
- * everywhere.
- */
+// The per-tool suite is Chromium-only: it asserts bytes, which come from wasm and pure
+// steps that are identical everywhere. The shell specs are what run in all three.
 const PER_TOOL = /tools\.spec\.ts/
 
 export default defineConfig({

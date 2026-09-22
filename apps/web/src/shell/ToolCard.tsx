@@ -5,13 +5,8 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router'
 import { icons } from './icons'
 
-/**
- * One card is one link with one accessible name, so nothing with a landmark role goes inside
- * the <Link>, because a landmark is skipped when the browser computes a link's name, and that
- * shipped broken here once.
- *
- * `lead` is the half-width treatment for the tools people actually arrive for.
- */
+/** Nothing with a landmark role may go inside the <Link>: a landmark is skipped when the
+ * browser computes a link's accessible name. This shipped broken once. */
 export function ToolCard({ id, lead = false }: { id: ToolId; lead?: boolean }) {
   const { t } = useTranslation()
   const Icon = icons[id]

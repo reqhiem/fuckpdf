@@ -26,8 +26,6 @@ export default function SplitOptionsPanel({ value, onChange }: OptionsPanelProps
 
   return (
     <div className="flex flex-col gap-4">
-      {/* Four modes with sentence-length labels: a popover reads better than a row of
-          segments, and only one of them is ever relevant at a time. */}
       <Select
         onChange={(key) => onChange({ ...options, mode: String(key ?? mode) as SplitMode })}
         value={mode}

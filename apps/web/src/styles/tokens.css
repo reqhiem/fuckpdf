@@ -15,19 +15,12 @@
 @custom-variant dark (&:where(.dark, .dark *));
 
 /*
- * The design is a drafting table, not a terminal: hairline rules, a measuring grid, and
- * orange used the way a marking pencil is — to show where the cut goes. Numbers are mono
- * because they are measurements.
- *
- * Only names HeroUI does NOT own may live in this `@theme` block.
- *
- * HeroUI ships `@theme inline { --color-surface: var(--surface); --color-muted: var(--muted);
- * --color-accent: var(--accent); --color-danger: var(--danger); ... }`, and Tailwind merges
- * `@theme` blocks last-wins. Redefining one of those names here pins it to a single literal
- * for both themes, and every HeroUI stylesheet that compiles `bg-surface` or `text-muted`
- * (about thirty of them: card, alert, modal, drawer, select, table, tabs, toast, skeleton)
- * silently renders the wrong colour. That shipped broken for an afternoon; do not re-add
- * a `--color-*` name that appears in `@heroui/styles/themes/shared/theme.css`.
+ * Only names HeroUI does NOT own may live in this `@theme` block. HeroUI declares
+ * `--color-surface`, `--color-muted`, `--color-accent` and `--color-danger` in
+ * `@theme inline`, Tailwind merges `@theme` last-wins, and redefining one pins it to a
+ * single literal in both themes — about thirty HeroUI stylesheets then render the wrong
+ * colour. Note also that `@theme inline` does not emit the property, so `var(--color-*)`
+ * is undefined in our own rules.
  *
  * Brand constants that feed HeroUI's variables are `--brand-*` on `:root` instead, below.
  */
@@ -38,7 +31,6 @@
   --color-ink: oklch(0.1665 0.0124 254.17);
   --color-paper: oklch(0.9673 0.006 40);
 
-  /* Exponential ease-out. No bounce — this is an instrument, not a toy. */
   --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
 
   --z-sticky: 20;
@@ -47,19 +39,14 @@
   --z-toast: 60;
 }
 
-/*
- * HeroUI's semantic variables, remapped onto the brand. This bridge is the whole
- * integration: every HeroUI component reads these, so no component needs overriding.
- *
- * `--brand-*` are the fixed identity values. The HeroUI names below are what actually
- * varies by theme, which is why the brand values are not themselves themed.
- */
+/* HeroUI's semantic variables remapped onto the brand: the whole integration, so no
+ * component needs overriding. `--brand-*` are fixed; the HeroUI names vary by theme. */
 :root,
 [data-theme="light"] {
   --brand-accent: oklch(0.6839 0.2069 33.86);
   --brand-danger: oklch(0.6256 0.1933 23.03);
   --brand-ok: oklch(0.7624 0.1544 159.36);
-  /* Two mutes, not one: the dark-mode grey is only 2.3:1 on paper and fails AA there. */
+  /* Two mutes: the dark-mode grey is 2.3:1 on paper and fails AA there. */
   --brand-muted-light: oklch(0.5 0.015 255);
   --brand-muted-dark: oklch(0.7034 0.0135 255.53);
 
@@ -163,7 +150,6 @@ html.dark,
   body {
     font-family: var(--font-sans);
     min-height: 100dvh;
-    /* Two fixed washes, carried over from reqhiem.dev. */
     background-image:
       radial-gradient(60rem 40rem at 0% 0%, rgb(255 90 54 / 0.1), transparent 60%),
       radial-gradient(60rem 40rem at 100% 0%, rgb(18 32 66 / 0.1), transparent 60%);
@@ -193,7 +179,6 @@ html.dark,
 }
 
 @layer components {
-  /* 56px drafting grid — the measuring surface the whole product sits on. */
   .hero-grid {
     background-image:
       linear-gradient(to right, rgb(11 15 20 / 0.05) 1px, transparent 1px),
@@ -207,7 +192,6 @@ html.dark,
       linear-gradient(to bottom, rgb(246 244 239 / 0.06) 1px, transparent 1px);
   }
 
-  /* Fades the grid out at the edges so it reads as a surface, not a cut-off band. */
   .grid-fade {
     mask-image: radial-gradient(70% 90% at 30% 40%, #000 30%, transparent 100%);
   }
@@ -220,12 +204,10 @@ html.dark,
     box-shadow: var(--surface-shadow);
   }
 
-  /* A hairline registration rule, like the trim marks on a print proof. */
   .hairline {
     border-color: var(--separator);
   }
 
-  /* Numbers are measurements: mono, tabular, never shifting width as they tick. */
   .measure {
     font-family: var(--font-mono);
     font-variant-numeric: tabular-nums;

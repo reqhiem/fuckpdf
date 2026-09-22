@@ -1,17 +1,9 @@
-/**
- * PDFium adapter contract.
- *
- * PDFium is the only renderer in this codebase (AGENTS.md invariant 4). The adapter
- * exists because wasm instantiation, document lifetime and memory release are easy to
- * get wrong, not to abstract over a second engine — there is none.
- *
- * Every document must be closed. Callers use `withDocument` unless they have a reason.
- */
+// Every document must be closed. Use `withDocument` unless you have a reason not to.
 
 export type RenderOptions = {
   /** 1-based. */
   page: number
-  /** Target DPI; 72 is PDF user-space 1:1. PRD §5.2 allows 72–300. */
+  /** 72 is PDF user space 1:1. */
   dpi: number
 }
 
@@ -24,8 +16,7 @@ export type RenderedPage = {
 
 export type PdfiumDocument = {
   readonly pageCount: number
-  /** Page size in PDF points, 1-based index. Async so a worker-backed engine can
-   * satisfy the same contract as the in-process one. */
+  /** Async so a worker-backed engine satisfies the same contract as the in-process one. */
   pageSize(page: number): Promise<{ width: number; height: number }>
   render(options: RenderOptions): Promise<RenderedPage>
   extractText(page: number): Promise<string>
@@ -34,7 +25,6 @@ export type PdfiumDocument = {
 
 export type PdfiumEngine = {
   open(bytes: Uint8Array, password?: string): Promise<PdfiumDocument>
-  /** Opens, runs, and closes even when `fn` throws. */
   withDocument<T>(
     bytes: Uint8Array,
     fn: (doc: PdfiumDocument) => Promise<T>,
