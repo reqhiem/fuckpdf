@@ -97,11 +97,10 @@ export async function chooseToggle(page: Page, group: string, option: string): P
 /**
  * Types a value into a HeroUI `NumberField` and commits it.
  *
- * React Aria commits a number field on blur or Enter, not on every keystroke. In practice
- * the next action in a test blurs the field anyway, so `fill` alone usually works - but
- * only by accident of ordering. The explicit Enter makes the value land before the next
- * line runs, whatever that line is, and the `toHaveValue` check fails loudly here rather
- * than as a confusing byte mismatch further down.
+ * React Aria's `useNumberField` calls `onChange` as soon as the typed text parses, so
+ * `fill` alone does commit; blur and Enter only reformat and clamp. The Enter is kept
+ * because it also commits a partial value that has not parsed yet, and the `toHaveValue`
+ * check then fails loudly here rather than as a confusing byte mismatch further down.
  */
 export async function setNumber(page: Page, label: string, value: string): Promise<void> {
   // `getByLabel` is too broad here: HeroUI's NumberField labels the increment and decrement

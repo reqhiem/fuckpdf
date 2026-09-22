@@ -93,7 +93,14 @@ size ceiling ~6rem. Prose capped at 65–75ch.
   one sanctioned exception is the landing tool grid, where cards have deliberately varying
   spans to give the eleven tools a hierarchy; varying spans need a known column count, so it
   uses `sm:grid-cols-2 lg:grid-cols-6`. Group sizes are chosen so every row fills exactly.
-- Radius `--radius: 0.75rem`. Fields inherit `--field-radius`.
+- Radius is two tiers, which is HeroUI's own system and is applied consistently by it:
+  **surfaces** (cards, panels, popovers, the drafting well) use `--radius` at 0.75rem, and
+  **interactive controls** (buttons, chips, toggles) use `rounded-3xl`, which reads as a
+  pill at control heights. Fields inherit `--field-radius`. Do not flatten the control tier
+  by overriding `--radius-3xl`: sixteen HeroUI stylesheets share that name, so the override
+  would also square off modals, tabs, avatars, badges and the calendar. Two documented tiers
+  is a system; a third ad-hoc value is not. The only sanctioned exception is the
+  page-numbers anchor grid, where each button is a miniature page and needs real corners.
 - Z-index is a named scale (`--z-sticky` 20, `--z-backdrop` 40, `--z-modal` 50,
   `--z-toast` 60). Never an arbitrary `9999`.
 - **Nothing sticky may overlap a form field.** A sticky action bar gets its own row in the

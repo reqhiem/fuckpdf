@@ -66,7 +66,7 @@
     "lead": "Every site that asks you to upload a PDF also promises not to look at it. This one makes a duller promise: it never receives the file, so there is nothing to look at. You can check that in about a minute.",
     "engine": {
       "title": "It runs on your machine",
-      "body": "PDFium, compiled to WebAssembly, and pdf-lib run in a Web Worker in this tab. The bytes go from your disk into your own memory and back out as a download."
+      "body": "PDFium, compiled to WebAssembly, renders pages in a Web Worker. pdf-lib reads and writes the file structure in the page itself. Either way the bytes go from your disk into your own memory and back out as a download."
     },
     "network": {
       "title": "Watch the Network tab",
@@ -112,7 +112,7 @@
     "sections": {
       "what": {
         "title": "What happens to your file",
-        "body": "You choose a file. Your browser reads it into memory and transfers the bytes to a Web Worker. The worker runs PDFium, compiled to WebAssembly, and pdf-lib, produces a new file, and hands it back. The download comes from a blob in this tab. No step in that list touches a network."
+        "body": "You choose a file. Your browser reads it into memory and hands the bytes to an engine: PDFium, compiled to WebAssembly, in a Web Worker, or pdf-lib in the page itself. The engine produces a new file and the download comes from a blob in this tab. No step in that list touches a network."
       },
       "verify": {
         "title": "How to check",
