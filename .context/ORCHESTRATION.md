@@ -27,7 +27,36 @@ Antigravity (`agy`); judgement-heavy work stays on Claude/Codex workers.
 5. **Every tool step lands with one runnable check.** Smallest thing that fails if the
    logic breaks. No fixture frameworks.
 
-## Orca run
+## Waves
 
-- Run: `run_edf6ec1191d0`
-- Objective: fuckpdf v1 — M0 shell + M1 structural tools
+### Wave 1 — v1 (M0 shell + M1 structural tools)
+
+- Orca run: `run_edf6ec1191d0`
+- 7 dispatches, all settled and released. M0 and M1 shipped and byte-verified in a real
+  browser; CI and Deploy green.
+
+### Wave 2 — HeroUI v3 design system migration
+
+In-session Claude subagents rather than Orca workers: the wave is one repo, one working
+tree, and four disjoint file sets, so the coordination Orca buys was not worth its setup.
+
+The contract was frozen before dispatch, exactly as in wave 1 — `packages/ui/src/index.tsx`
+(the primitives seam), `apps/web/src/styles/tokens.css` (the HeroUI variable bridge) and
+`.context/DESIGN.md` (the binding visual system) were all written by the coordinator first,
+so no two agents could disagree about them.
+
+| Agent | Owns | Task |
+|---|---|---|
+| `panels` | `apps/web/src/tools/**`, `en.options.json` | Eleven option panels onto HeroUI fields |
+| `shell` | `apps/web/src/shell/**`, `en.json` | Landing, header, footer, tool cards, static pages |
+| `toolpage` | `apps/web/src/tool/ToolPage.tsx`, `components/page-grid/**`, `en.tool.json` | Tool page states, the sticky-overlap bug, page grid |
+| `docs` | `README.md`, `CONTRIBUTING.md`, `.context/ROADMAP.md`, `.context/ARCHITECTURE.md` | Repository presentation |
+
+Locale catalogues are split three ways (`en.json`, `en.options.json`, `en.tool.json`,
+merged in `i18n.ts`) for the same reason as in wave 1: one JSON file edited by three agents
+is a guaranteed conflict, and the split costs one line of merge.
+
+The coordinator kept `e2e/`, root config, and the token bridge. That mattered: HeroUI's
+`Select` is a React Aria listbox, so Playwright's `selectOption` stops working on it, and
+the four affected tests were fixed on the coordinator's side rather than by letting a
+worker edit the suite that grades it.

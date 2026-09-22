@@ -64,3 +64,50 @@ export async function waitForGrid(page: Page, count: number): Promise<void> {
 /** The grid's thumbnail button for a page, which is also its selection control. */
 export const pageThumbnail = (page: Page, number: number, total: number) =>
   page.getByRole('button', { name: `Page ${number} of ${total}` })
+
+/**
+ * Picks an option from a HeroUI `Select`.
+ *
+ * Playwright's `selectOption` only drives a native `<select>`, and HeroUI's Select is a
+ * React Aria listbox: a trigger button that opens a popover of `role="option"` elements.
+ * Going through the trigger's accessible name and the option's visible name keeps the
+ * guarantee the rest of this file makes - a control this cannot reach is a control a
+ * screen reader cannot reach either.
+ */
+export async function chooseOption(page: Page, field: string, option: string): Promise<void> {
+  await page.getByRole('button', { name: field }).click()
+  const item = page.getByRole('option', { name: option, exact: true })
+  await item.click()
+  // The popover unmounts on selection; waiting for that keeps the next action from racing it.
+  await expect(item).toBeHidden()
+}
+
+/**
+ * Picks an option from a HeroUI `ToggleButtonGroup`.
+ *
+ * In single-selection mode React Aria deletes `aria-pressed` and renders the group as a
+ * radiogroup of radios, so this is a radio click and not a button click.
+ */
+export async function chooseToggle(page: Page, group: string, option: string): Promise<void> {
+  const radio = page.getByRole('radiogroup', { name: group }).getByRole('radio', { name: option })
+  await radio.click()
+  await expect(radio).toBeChecked()
+}
+
+/**
+ * Types a value into a HeroUI `NumberField` and commits it.
+ *
+ * React Aria commits a number field on blur or Enter, not on every keystroke. In practice
+ * the next action in a test blurs the field anyway, so `fill` alone usually works - but
+ * only by accident of ordering. The explicit Enter makes the value land before the next
+ * line runs, whatever that line is, and the `toHaveValue` check fails loudly here rather
+ * than as a confusing byte mismatch further down.
+ */
+export async function setNumber(page: Page, label: string, value: string): Promise<void> {
+  // `getByLabel` is too broad here: HeroUI's NumberField labels the increment and decrement
+  // buttons with the same text, so the field has to be addressed by its textbox role.
+  const field = page.getByRole('textbox', { name: label, exact: true })
+  await field.fill(value)
+  await field.press('Enter')
+  await expect(field).toHaveValue(value)
+}

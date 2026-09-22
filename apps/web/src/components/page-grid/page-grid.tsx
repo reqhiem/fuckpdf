@@ -179,7 +179,7 @@ export function PageGrid({
         </p>
         {onCropChange ? <p className="text-sm text-muted">{t('pageGrid.cropHint')}</p> : null}
         {active.insertBlank ? (
-          <Button onClick={insertBlank} variant="ghost">
+          <Button onPress={insertBlank} variant="ghost">
             <FilePlus2 aria-hidden="true" size={16} />
             {t('pageGrid.insertBlank')}
           </Button>

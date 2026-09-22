@@ -4,8 +4,9 @@
  * when the cell scrolls away or unmounts (PRD NFR-3).
  */
 import { useSortable } from '@dnd-kit/sortable'
-import { cx } from '@fuckpdf/ui'
+import { cx, Skeleton } from '@fuckpdf/ui'
 import {
+  Check,
   Copy,
   Crop as CropIcon,
   FileText,
@@ -228,6 +229,16 @@ export function PageCell({
         ) : null}
       </button>
 
+      {capabilities.select && selected ? (
+        // The ring alone would make selection a colour-only signal.
+        <span
+          aria-hidden="true"
+          className="absolute top-3 right-3 z-10 flex size-6 items-center justify-center rounded-full bg-accent text-ink shadow"
+        >
+          <Check size={14} strokeWidth={3} />
+        </span>
+      ) : null}
+
       <div className="mt-2 flex items-center gap-1">
         <span className="mr-auto pl-1 font-mono text-xs text-muted">{page.number}</span>
         {capabilities.reorder ? (
@@ -305,11 +316,24 @@ type ThumbnailProps = {
   url: string | undefined
 }
 
+/**
+ * White is reserved for actual page stock (DESIGN.md), so the sheet carries its own
+ * background, hairline and shadow rather than inheriting the cell's well. That is what
+ * makes paper read as paper in both themes — and why the text on it is ink, never
+ * `text-muted`, whose dark-mode value fails contrast on a light ground.
+ */
+const SHEET = 'bg-white shadow-[0_1px_3px_rgb(0_0_0/0.18)] ring-1 ring-ink/15'
+
 function Thumbnail({ blank, error, label, number, ref, rotation, url }: ThumbnailProps) {
   const { t } = useTranslation()
   if (blank)
     return (
-      <span className="flex flex-col items-center gap-2 text-muted">
+      <span
+        className={cx(
+          SHEET,
+          'flex h-full w-[72%] flex-col items-center justify-center gap-2 text-ink/60',
+        )}
+      >
         <FileText aria-hidden="true" size={24} />
         <span className="text-xs">{t('pageGrid.blank')}</span>
       </span>
@@ -318,7 +342,7 @@ function Thumbnail({ blank, error, label, number, ref, rotation, url }: Thumbnai
     return (
       <img
         alt={label}
-        className="max-h-full max-w-full object-contain"
+        className={cx(SHEET, 'max-h-full max-w-full object-contain')}
         // Without this the browser starts a native image drag, which cancels the pointer
         // gesture the crop rectangle is riding on.
         draggable={false}
@@ -334,5 +358,12 @@ function Thumbnail({ blank, error, label, number, ref, rotation, url }: Thumbnai
         <span className="text-xs">{t('pageGrid.failed')}</span>
       </span>
     )
-  return <span className="text-xs text-muted">{t('pageGrid.loading', { number })}</span>
+  // A skeleton in the shape of a page, not a spinner — but the cell is a button, and a
+  // button with no accessible name is a defect, so the label stays for screen readers.
+  return (
+    <>
+      <Skeleton className="h-full w-[72%] rounded-sm" />
+      <span className="sr-only">{t('pageGrid.loading', { number })}</span>
+    </>
+  )
 }

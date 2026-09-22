@@ -1,4 +1,5 @@
 import type { CropOptions } from '@fuckpdf/tools'
+import { Description, Input, Label, NumberField, Switch, TextField } from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
@@ -10,80 +11,76 @@ export default function CropOptionsPanel({ value, onChange }: OptionsPanelProps)
   return (
     <div className="flex flex-col gap-4">
       <div className="grid grid-cols-2 gap-4">
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink dark:text-paper">
-            {t('options.crop.boxX')}
-          </span>
-          <input
-            className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-            type="number"
-            value={box.x}
-            onChange={(e) => onChange({ ...options, box: { ...box, x: Number(e.target.value) } })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink dark:text-paper">
-            {t('options.crop.boxY')}
-          </span>
-          <input
-            className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-            type="number"
-            value={box.y}
-            onChange={(e) => onChange({ ...options, box: { ...box, y: Number(e.target.value) } })}
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink dark:text-paper">
-            {t('options.crop.boxWidth')}
-          </span>
-          <input
-            className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-            type="number"
-            min={1}
-            value={box.width}
-            onChange={(e) =>
-              onChange({ ...options, box: { ...box, width: Number(e.target.value) } })
-            }
-          />
-        </label>
-        <label className="flex flex-col gap-1">
-          <span className="text-sm font-medium text-ink dark:text-paper">
-            {t('options.crop.boxHeight')}
-          </span>
-          <input
-            className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-            type="number"
-            min={1}
-            value={box.height}
-            onChange={(e) =>
-              onChange({ ...options, box: { ...box, height: Number(e.target.value) } })
-            }
-          />
-        </label>
+        <NumberField
+          minValue={0}
+          onChange={(x) => onChange({ ...options, box: { ...box, x: x ?? 0 } })}
+          value={box.x}
+        >
+          <Label>{t('options.crop.boxX')}</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input className="measure" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+
+        <NumberField
+          minValue={0}
+          onChange={(y) => onChange({ ...options, box: { ...box, y: y ?? 0 } })}
+          value={box.y}
+        >
+          <Label>{t('options.crop.boxY')}</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input className="measure" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+
+        <NumberField
+          minValue={1}
+          onChange={(width) => onChange({ ...options, box: { ...box, width: width ?? 1 } })}
+          value={box.width}
+        >
+          <Label>{t('options.crop.boxWidth')}</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input className="measure" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
+
+        <NumberField
+          minValue={1}
+          onChange={(height) => onChange({ ...options, box: { ...box, height: height ?? 1 } })}
+          value={box.height}
+        >
+          <Label>{t('options.crop.boxHeight')}</Label>
+          <NumberField.Group>
+            <NumberField.DecrementButton />
+            <NumberField.Input className="measure" />
+            <NumberField.IncrementButton />
+          </NumberField.Group>
+        </NumberField>
       </div>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.crop.pages')}
-        </span>
-        <input
-          className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-          type="text"
-          value={options.pages ?? ''}
-          onChange={(e) => onChange({ ...options, pages: e.target.value })}
-        />
-      </label>
+      <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
+        <Label>{t('options.crop.pages')}</Label>
+        <Input />
+        <Description>{t('options.crop.pagesHint')}</Description>
+      </TextField>
 
-      <label className="flex items-center gap-2">
-        <input
-          type="checkbox"
-          checked={options.flatten ?? false}
-          onChange={(e) => onChange({ ...options, flatten: e.target.checked })}
-        />
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.crop.flatten')}
-        </span>
-      </label>
+      <Switch
+        isSelected={options.flatten ?? false}
+        onChange={(flatten) => onChange({ ...options, flatten })}
+      >
+        <Switch.Content>
+          <Switch.Control>
+            <Switch.Thumb />
+          </Switch.Control>
+          <Label>{t('options.crop.flatten')}</Label>
+        </Switch.Content>
+      </Switch>
     </div>
   )
 }

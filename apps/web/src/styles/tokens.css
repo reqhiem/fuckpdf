@@ -1,4 +1,6 @@
 @import "tailwindcss";
+/* HeroUI v3 must come after Tailwind — it layers on top of Tailwind's base. */
+@import "@heroui/styles";
 
 @import "@fontsource/space-grotesk/300.css";
 @import "@fontsource/space-grotesk/400.css";
@@ -8,26 +10,143 @@
 @import "@fontsource/jetbrains-mono/400.css";
 @import "@fontsource/jetbrains-mono/500.css";
 
+@source "../../../../packages/ui/src";
+
 @custom-variant dark (&:where(.dark, .dark *));
 
+/*
+ * The design is a drafting table, not a terminal: hairline rules, a measuring grid, and
+ * orange used the way a marking pencil is — to show where the cut goes. Numbers are mono
+ * because they are measurements.
+ *
+ * Only names HeroUI does NOT own may live in this `@theme` block.
+ *
+ * HeroUI ships `@theme inline { --color-surface: var(--surface); --color-muted: var(--muted);
+ * --color-accent: var(--accent); --color-danger: var(--danger); ... }`, and Tailwind merges
+ * `@theme` blocks last-wins. Redefining one of those names here pins it to a single literal
+ * for both themes, and every HeroUI stylesheet that compiles `bg-surface` or `text-muted`
+ * (about thirty of them: card, alert, modal, drawer, select, table, tabs, toast, skeleton)
+ * silently renders the wrong colour. That shipped broken for an afternoon; do not re-add
+ * a `--color-*` name that appears in `@heroui/styles/themes/shared/theme.css`.
+ *
+ * Brand constants that feed HeroUI's variables are `--brand-*` on `:root` instead, below.
+ */
 @theme {
   --font-sans: "Space Grotesk", "Segoe UI", system-ui, sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, monospace;
 
-  --color-ink: #0b0f14;
-  --color-paper: #f6f4ef;
-  --color-muted: #9aa0a8;
-  --color-accent: #ff5a36;
-  --color-surface: #141a21;
-  --color-surface-muted: #1b222b;
-  --color-danger: #e5484d;
-  --color-ok: #3ecf8e;
+  --color-ink: oklch(0.1665 0.0124 254.17);
+  --color-paper: oklch(0.9673 0.006 40);
 
-  --ease-reveal: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Exponential ease-out. No bounce — this is an instrument, not a toy. */
+  --ease-reveal: cubic-bezier(0.16, 1, 0.3, 1);
+
+  --z-sticky: 20;
+  --z-backdrop: 40;
+  --z-modal: 50;
+  --z-toast: 60;
 }
 
-:root {
-  color-scheme: light dark;
+/*
+ * HeroUI's semantic variables, remapped onto the brand. This bridge is the whole
+ * integration: every HeroUI component reads these, so no component needs overriding.
+ *
+ * `--brand-*` are the fixed identity values. The HeroUI names below are what actually
+ * varies by theme, which is why the brand values are not themselves themed.
+ */
+:root,
+[data-theme="light"] {
+  --brand-accent: oklch(0.6839 0.2069 33.86);
+  --brand-danger: oklch(0.6256 0.1933 23.03);
+  --brand-ok: oklch(0.7624 0.1544 159.36);
+  /* Two mutes, not one: the dark-mode grey is only 2.3:1 on paper and fails AA there. */
+  --brand-muted-light: oklch(0.5 0.015 255);
+  --brand-muted-dark: oklch(0.7034 0.0135 255.53);
+
+  --radius: 0.75rem;
+  --border-width: 1px;
+  --field-border-width: 1px;
+  --ring-offset-width: 2px;
+
+  --background: var(--color-paper);
+  --foreground: var(--color-ink);
+
+  --surface: oklch(1 0 0 / 0.72);
+  --surface-foreground: var(--color-ink);
+  --surface-secondary: oklch(1 0 0 / 0.5);
+  --surface-secondary-foreground: var(--color-ink);
+  --surface-tertiary: oklch(1 0 0 / 0.35);
+  --surface-tertiary-foreground: var(--color-ink);
+
+  --overlay: oklch(0.99 0.003 40);
+  --overlay-foreground: var(--color-ink);
+
+  --muted: var(--brand-muted-light);
+  --default: oklch(0.1665 0.0124 254.17 / 0.06);
+  --default-foreground: var(--color-ink);
+
+  --accent: var(--brand-accent);
+  --accent-foreground: oklch(0.16 0.01 254);
+  --danger: var(--brand-danger);
+  --danger-foreground: oklch(0.99 0 0);
+  --success: var(--brand-ok);
+  --success-foreground: oklch(0.16 0.01 254);
+  --warning: oklch(0.82 0.1388 76.34);
+  --warning-foreground: oklch(0.16 0.01 254);
+
+  --field-background: oklch(1 0 0 / 0.6);
+  --field-foreground: var(--color-ink);
+  --field-placeholder: var(--brand-muted-light);
+  --field-border: oklch(0.1665 0.0124 254.17 / 0.18);
+  --field-focus: oklch(1 0 0 / 0.9);
+
+  --border: oklch(0.1665 0.0124 254.17 / 0.12);
+  --separator: oklch(0.1665 0.0124 254.17 / 0.1);
+  --focus: var(--brand-accent);
+  --link: var(--color-ink);
+  --backdrop: oklch(0.1665 0.0124 254.17 / 0.45);
+
+  --surface-shadow: 0 1px 2px oklch(0.1665 0.0124 254.17 / 0.05);
+  --overlay-shadow: 0 24px 48px -12px oklch(0.1665 0.0124 254.17 / 0.25);
+  --field-shadow: 0 0 0 0 transparent;
+
+  color-scheme: light;
+}
+
+html.dark,
+[data-theme="dark"] {
+  --background: var(--color-ink);
+  --foreground: var(--color-paper);
+
+  --surface: oklch(1 0 0 / 0.04);
+  --surface-foreground: var(--color-paper);
+  --surface-secondary: oklch(1 0 0 / 0.07);
+  --surface-secondary-foreground: var(--color-paper);
+  --surface-tertiary: oklch(1 0 0 / 0.1);
+  --surface-tertiary-foreground: var(--color-paper);
+
+  --overlay: oklch(0.215 0.0165 252.5);
+  --overlay-foreground: var(--color-paper);
+
+  --muted: var(--brand-muted-dark);
+  --default: oklch(1 0 0 / 0.08);
+  --default-foreground: var(--color-paper);
+
+  --field-background: oklch(1 0 0 / 0.04);
+  --field-foreground: var(--color-paper);
+  --field-placeholder: var(--brand-muted-dark);
+  --field-border: oklch(1 0 0 / 0.14);
+  --field-focus: oklch(1 0 0 / 0.07);
+
+  --border: oklch(1 0 0 / 0.12);
+  --separator: oklch(1 0 0 / 0.1);
+  --link: var(--color-paper);
+  --backdrop: oklch(0.08 0.008 254 / 0.72);
+
+  --surface-shadow: 0 0 0 0 transparent;
+  --overlay-shadow: 0 24px 48px -12px oklch(0 0 0 / 0.6);
+
+  color-scheme: dark;
 }
 
 @layer base {
@@ -46,25 +165,35 @@
     min-height: 100dvh;
     /* Two fixed washes, carried over from reqhiem.dev. */
     background-image:
-      radial-gradient(60rem 40rem at 0% 0%, rgb(255 90 54 / 0.12), transparent 60%),
-      radial-gradient(60rem 40rem at 100% 0%, rgb(18 32 66 / 0.12), transparent 60%);
+      radial-gradient(60rem 40rem at 0% 0%, rgb(255 90 54 / 0.1), transparent 60%),
+      radial-gradient(60rem 40rem at 100% 0%, rgb(18 32 66 / 0.1), transparent 60%);
     background-attachment: fixed;
   }
 
   html.dark body {
     background-image:
-      radial-gradient(60rem 40rem at 0% 0%, rgb(255 90 54 / 0.18), transparent 60%),
-      radial-gradient(60rem 40rem at 100% 0%, rgb(18 32 66 / 0.28), transparent 60%);
+      radial-gradient(60rem 40rem at 0% 0%, rgb(255 90 54 / 0.16), transparent 60%),
+      radial-gradient(60rem 40rem at 100% 0%, rgb(18 32 66 / 0.26), transparent 60%);
   }
 
   :focus-visible {
-    outline: 2px solid var(--color-accent);
+    outline: 2px solid var(--brand-accent);
     outline-offset: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
   }
 }
 
 @layer components {
-  /* 56px schematic grid — landing hero only. */
+  /* 56px drafting grid — the measuring surface the whole product sits on. */
   .hero-grid {
     background-image:
       linear-gradient(to right, rgb(11 15 20 / 0.05) 1px, transparent 1px),
@@ -78,16 +207,28 @@
       linear-gradient(to bottom, rgb(246 244 239 / 0.06) 1px, transparent 1px);
   }
 
-  .surface {
-    border-radius: var(--radius-2xl);
-    border: 1px solid rgb(0 0 0 / 0.1);
-    background-color: rgb(255 255 255 / 0.8);
-    backdrop-filter: blur(8px);
+  /* Fades the grid out at the edges so it reads as a surface, not a cut-off band. */
+  .grid-fade {
+    mask-image: radial-gradient(70% 90% at 30% 40%, #000 30%, transparent 100%);
   }
 
-  .dark .surface {
-    border-color: rgb(255 255 255 / 0.1);
-    background-color: rgb(255 255 255 / 0.05);
+  .surface {
+    border-radius: var(--radius);
+    border: var(--border-width) solid var(--border);
+    background-color: var(--surface);
+    color: var(--surface-foreground);
+    box-shadow: var(--surface-shadow);
+  }
+
+  /* A hairline registration rule, like the trim marks on a print proof. */
+  .hairline {
+    border-color: var(--separator);
+  }
+
+  /* Numbers are measurements: mono, tabular, never shifting width as they tick. */
+  .measure {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
   }
 }
 
@@ -95,7 +236,9 @@
   *,
   *::before,
   *::after {
-    animation: none !important;
-    transition: none !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
   }
 }

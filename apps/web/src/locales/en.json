@@ -26,20 +26,62 @@
       "cancelled": "Page {{number}} was put back."
     }
   },
-  "brand": { "fuck": "fuck", "pdf": "pdf" },
-  "nav": { "home": "Home", "privacy": "Privacy", "about": "About", "licenses": "Licenses" },
-  "theme": { "toggle": "Toggle colour theme" },
+  "brand": {
+    "fuck": "fuck",
+    "pdf": "pdf"
+  },
+  "nav": {
+    "home": "Home",
+    "privacy": "Privacy",
+    "about": "About",
+    "licenses": "Licenses"
+  },
+  "theme": {
+    "toggle": "Toggle colour theme"
+  },
   "footer": {
-    "privacy": "Your files stay in your browser. Nothing is uploaded, logged, or measured."
+    "privacy": "Your files stay in your browser. Nothing is uploaded, logged, or measured.",
+    "source": "Open source under the MIT licence.",
+    "nav": "Footer"
   },
   "landing": {
     "kicker": "Browser-only PDF tools",
     "dek": "PDF tools. No upload. No account. No bullshit.",
+    "mechanism": "Every tool runs in a Web Worker inside this tab, on your machine.",
     "primary": "Pick a tool",
-    "secondary": "How privacy works",
-    "search": "Search tools"
+    "secondary": "How this works",
+    "facts": {
+      "tools": "tools, all free",
+      "uploaded": "bytes uploaded",
+      "requests": "network requests"
+    },
+    "toolsHint": "Every tool works the same way: drop the file, run it, download it.",
+    "search": "Search tools",
+    "searchPlaceholder": "merge, rotate, page numbers…",
+    "empty": "Nothing matches “{{query}}”.",
+    "emptyHint": "No tool here matches that. Try a shorter word, or clear the search to see all of them."
   },
-  "groups": { "organize": "Organize", "edit": "Edit", "convert": "Convert" },
+  "proof": {
+    "title": "Nothing leaves this tab. Go and check.",
+    "lead": "Every site that asks you to upload a PDF also promises not to look at it. This one makes a duller promise: it never receives the file, so there is nothing to look at. You can check that in about a minute.",
+    "engine": {
+      "title": "It runs on your machine",
+      "body": "PDFium, compiled to WebAssembly, and pdf-lib run in a Web Worker in this tab. The bytes go from your disk into your own memory and back out as a download."
+    },
+    "network": {
+      "title": "Watch the Network tab",
+      "body": "Open developer tools, switch to Network, then run any tool on any file. The request count does not move. The page is served with a Content-Security-Policy that blocks outbound connections anyway."
+    },
+    "offline": {
+      "title": "Then pull the plug",
+      "body": "Turn the network off and reload. Tools you have already opened keep working, because they were never running anywhere else. A site that uploads cannot survive that test."
+    }
+  },
+  "groups": {
+    "organize": "Organize",
+    "edit": "Edit",
+    "convert": "Convert"
+  },
   "tool": {
     "back": "All tools",
     "drop": "Drop files here",
@@ -66,30 +108,106 @@
   },
   "privacy": {
     "title": "Privacy, without the fine print",
-    "body": "Files are processed in your browser and never uploaded. Open your browser’s Network tab to verify it. After the first load, previously used tools can work offline."
+    "lead": "There is no policy to read here, because there is no data to have a policy about. Nothing you open in fuckpdf is sent anywhere, and there is nowhere for it to be sent.",
+    "sections": {
+      "what": {
+        "title": "What happens to your file",
+        "body": "You choose a file. Your browser reads it into memory and transfers the bytes to a Web Worker. The worker runs PDFium, compiled to WebAssembly, and pdf-lib, produces a new file, and hands it back. The download comes from a blob in this tab. No step in that list touches a network."
+      },
+      "verify": {
+        "title": "How to check",
+        "body": "Open your browser's developer tools, go to the Network tab, and run a tool. Nothing new appears. The site is served with a Content-Security-Policy of connect-src 'self', so the browser would refuse an outbound request even if the code tried to make one."
+      },
+      "offline": {
+        "title": "Offline",
+        "body": "After the first load, tools you have already used keep working with no connection at all. Disconnect and try it. A site that processes files on a server cannot pass that test. That is what makes it worth running."
+      },
+      "stored": {
+        "title": "What is stored",
+        "body": "One value in this browser's own localStorage: whether you picked the light or the dark theme. No cookies, no analytics, no telemetry, no error reporting, and no fonts or scripts loaded from anyone else."
+      }
+    }
   },
   "about": {
     "title": "A small tool for an annoying file format",
-    "body": "This is a browser-only PDF toolkit. It has no accounts, no server-side processing, and no tracking."
+    "lead": "fuckpdf does the boring things people actually need to do to a PDF (merge it, split it, rotate it, number it, crop it) in the browser, immediately, for free.",
+    "sections": {
+      "why": {
+        "title": "Why it exists",
+        "body": "The usual PDF sites take a file you probably should not hand to a stranger (a contract, a payslip, a scan of your passport), upload it to a machine you know nothing about, put you in a queue, and ask you to sign up somewhere around the third page. None of that is required to rotate a page. The work is arithmetic, and your computer does arithmetic."
+      },
+      "how": {
+        "title": "How it works",
+        "body": "Every tool is a pure step that takes bytes and returns bytes. Two engines do the work: PDFium, compiled to WebAssembly, for rendering pages, and pdf-lib for reading and writing the file structure. PDFium loads only when a tool needs it, in a Web Worker, so the interface stays responsive and nothing large downloads until it has to."
+      },
+      "scope": {
+        "title": "What it will not do",
+        "body": "It will not edit existing text inside a PDF, recover a password you do not have, or run anything that needs a model or a server. Where a conversion loses fidelity, the tool says so before you run it instead of after."
+      }
+    }
   },
   "licenses": {
     "title": "Licenses",
-    "body": "This application uses open-source software. A complete dependency license inventory is generated with release builds."
+    "lead": "This application is open source under the MIT licence, and it stands on a stack of other people's work. A complete dependency inventory is generated with each release build.",
+    "sections": {
+      "app": {
+        "title": "This application",
+        "body": "MIT. The interface is built with React, React Router, Tailwind CSS, HeroUI, Zustand, i18next, dnd-kit and fflate, all MIT-licensed. Comlink is Apache-2.0 and the lucide icon set is ISC."
+      },
+      "engines": {
+        "title": "PDF engines",
+        "body": "PDFium is BSD-3-Clause, and the WebAssembly build used here ships under MIT. pdf-lib is MIT. PDFium is loaded only by the tools that render pages, which is why the first page is small and the engine is not."
+      },
+      "fonts": {
+        "title": "Fonts",
+        "body": "Space Grotesk and JetBrains Mono, both under the SIL Open Font License 1.1, served from this origin. No font is fetched from a third party, because no request is made to one."
+      }
+    }
   },
   "tools": {
-    "merge": { "name": "Merge PDF", "description": "Combine PDFs into one file." },
-    "split": { "name": "Split PDF", "description": "Break one PDF into useful pieces." },
-    "remove-pages": { "name": "Remove pages", "description": "Delete selected pages from a PDF." },
-    "extract-pages": { "name": "Extract pages", "description": "Keep only the pages you need." },
-    "organize": { "name": "Organize PDF", "description": "Reorder, rotate, or remove pages." },
-    "rotate": { "name": "Rotate PDF", "description": "Turn pages the right way up." },
+    "merge": {
+      "name": "Merge PDF",
+      "description": "Combine PDFs into one file."
+    },
+    "split": {
+      "name": "Split PDF",
+      "description": "Break one PDF into useful pieces."
+    },
+    "remove-pages": {
+      "name": "Remove pages",
+      "description": "Delete selected pages from a PDF."
+    },
+    "extract-pages": {
+      "name": "Extract pages",
+      "description": "Keep only the pages you need."
+    },
+    "organize": {
+      "name": "Organize PDF",
+      "description": "Reorder, rotate, or remove pages."
+    },
+    "rotate": {
+      "name": "Rotate PDF",
+      "description": "Turn pages the right way up."
+    },
     "page-numbers": {
       "name": "Page numbers",
       "description": "Add page numbers where they belong."
     },
-    "watermark": { "name": "Watermark", "description": "Add text or an image over pages." },
-    "crop": { "name": "Crop PDF", "description": "Trim page edges without drama." },
-    "jpg-to-pdf": { "name": "JPG to PDF", "description": "Turn images into a PDF." },
-    "pdf-to-jpg": { "name": "PDF to JPG", "description": "Export PDF pages as images." }
+    "watermark": {
+      "name": "Watermark",
+      "description": "Add text or an image over pages."
+    },
+    "crop": {
+      "name": "Crop PDF",
+      "description": "Trim page edges without drama."
+    },
+    "jpg-to-pdf": {
+      "name": "JPG to PDF",
+      "description": "Turn images into a PDF."
+    },
+    "pdf-to-jpg": {
+      "name": "PDF to JPG",
+      "description": "Export PDF pages as images."
+    }
   }
 }

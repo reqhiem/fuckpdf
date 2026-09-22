@@ -1,4 +1,6 @@
 import { expect, test } from '@playwright/test'
+import { createPagedPdf } from '../fixtures/pdf'
+import { openTool, pdfFile, upload } from '../fixtures/ui'
 
 test('the shell exposes tools and opens a tool dropzone', async ({ page }) => {
   await page.goto('/')
@@ -14,8 +16,18 @@ test('the shell exposes tools and opens a tool dropzone', async ({ page }) => {
   ).toBeVisible()
 })
 
+/**
+ * The picker is nine buttons whose only visible content is a positioning dot, so its
+ * accessible name has to come from a label. It shipped without one once, which made every
+ * anchor nameless and stateless to a screen reader.
+ *
+ * A file is uploaded first because the options panel only renders once there is something
+ * to run against: every tool runs on its defaults, so an empty tool page shows the
+ * dropzone rather than a form for a file that does not exist yet.
+ */
 test('the page-numbers position picker is reachable by name', async ({ page }) => {
-  await page.goto('/page-numbers')
+  await openTool(page, 'page-numbers', 'Page numbers')
+  await upload(page, [pdfFile('one.pdf', await createPagedPdf([200]))])
 
   const group = page.getByRole('group', { name: /position/i })
   await expect(group).toBeVisible()

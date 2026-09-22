@@ -2,24 +2,45 @@ import {
   loadTool,
   type Output,
   type PdfInput,
+  type Progress,
   TOOL_IDS,
   type ToolId,
   type ToolModule,
 } from '@fuckpdf/tools'
-import { Button, Dropzone, Progress, Surface } from '@fuckpdf/ui'
+import {
+  Alert,
+  Button,
+  Card,
+  cx,
+  Description,
+  Dropzone,
+  Input,
+  Label,
+  ProgressBar,
+  Skeleton,
+  TextField,
+} from '@fuckpdf/ui'
 import { zipSync } from 'fflate'
 import { Suspense, useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router'
 import { PageGrid, type PageGridCrop, type PageRef } from '../components/page-grid'
-import { formatBytes } from '../lib/format'
+import { formatBytes, formatTypes } from '../lib/format'
 import { Landing } from '../shell/Landing'
 import { encode, engine } from '../workers/engine'
 import { optionsPanels } from './options-panel'
-import { GRID_TOOLS, toOrganizeOperations, toPageRangeString } from './page-selection'
+import {
+  GRID_ONLY_TOOLS,
+  GRID_TOOLS,
+  toOrganizeOperations,
+  toPageRangeString,
+} from './page-selection'
 
 const SOFT_LIMIT = 100 * 1024 * 1024
 const HARD_LIMIT = 500 * 1024 * 1024
+
+/** The stages the steps actually report. Anything else falls back to the generic label. */
+const STAGES = new Set(['load', 'file', 'page', 'image', 'done'])
 
 type RunError = { message: string; detail: string }
 
@@ -34,9 +55,11 @@ export function ToolPage() {
   const [options, setOptions] = useState<Record<string, unknown>>({})
   const [files, setFiles] = useState<File[]>([])
   const [warning, setWarning] = useState('')
-  const [progress, setProgress] = useState<number | null>(null)
+  const [progress, setProgress] = useState<Progress | null>(null)
+  const [running, setRunning] = useState(false)
   const [outputs, setOutputs] = useState<Output[]>([])
   const [error, setError] = useState<RunError | null>(null)
+  const [copied, setCopied] = useState(false)
   const [passwordFile, setPasswordFile] = useState<string | null>(null)
   const [password, setPassword] = useState('')
   const [gridBytes, setGridBytes] = useState<Uint8Array | null>(null)
@@ -100,9 +123,10 @@ export function ToolPage() {
   if (!toolId) return <Landing />
 
   const OptionsPanel = optionsPanels[toolId]
+  const maxFiles = module?.inputs.max ?? 1
 
   const select = (next: File[]) => {
-    const all = [...files, ...next].slice(0, module?.inputs.max ?? Number.MAX_SAFE_INTEGER)
+    const all = [...files, ...next].slice(0, maxFiles)
     const bytes = all.reduce((sum, file) => sum + file.size, 0)
     // deviceMemory is Chromium-only; absent means "assume it is fine" rather than "block".
     const memory = (navigator as Navigator & { deviceMemory?: number }).deviceMemory
@@ -120,7 +144,8 @@ export function ToolPage() {
     controller.current = abort
     setError(null)
     setOutputs([])
-    setProgress(0)
+    setRunning(true)
+    setProgress({ value: 0 })
     try {
       const inputs: PdfInput[] = await Promise.all(
         files.map(async (file) => ({
@@ -134,11 +159,11 @@ export function ToolPage() {
         { ...options, ...gridOptions(), engine, encode },
         {
           signal: abort.signal,
-          onProgress: ({ value }) => setProgress(value),
+          onProgress: setProgress,
         },
       )
       setOutputs(produced)
-      setProgress(1)
+      setProgress({ value: 1, stage: 'done' })
       setPasswordFile(null)
     } catch (caught) {
       const issue = caught instanceof Error ? caught : new Error(String(caught))
@@ -149,9 +174,13 @@ export function ToolPage() {
         setProgress(null)
         return
       }
-      setError({ message: issue.message, detail: issue.stack ?? issue.name })
+      // A ToolError carries its own copyable detail; anything else only has a stack.
+      const detail =
+        'detail' in issue && typeof issue.detail === 'string' ? issue.detail : issue.stack
+      setError({ message: issue.message, detail: detail ?? issue.name })
       setProgress(null)
     } finally {
+      setRunning(false)
       controller.current = null
     }
   }
@@ -192,32 +221,104 @@ export function ToolPage() {
     setPassword('')
     setError(null)
     setWarning('')
+    setSelected(new Set())
+    setCrop(null)
   }
 
+  const copyDetail = () => {
+    if (!error) return
+    void navigator.clipboard
+      .writeText(error.detail)
+      .then(() => {
+        setCopied(true)
+        setTimeout(() => setCopied(false), 2000)
+      })
+      .catch(() => undefined)
+  }
+
+  const stageLabel =
+    progress?.stage && STAGES.has(progress.stage)
+      ? t(`toolPage.stage.${progress.stage}`)
+      : t('tool.progress')
+
+  // Grid tools need the width for page thumbnails. A form-driven tool does not, and giving
+  // it the full column just leaves a wide empty gutter beside the options.
+  const column = gridCapabilities ? 'max-w-6xl' : 'max-w-3xl'
+
   return (
-    <div className="mx-auto max-w-6xl px-6 py-12">
+    <div className={cx('mx-auto px-6 py-12', column)}>
       <Link className="text-sm text-muted" to="/">
         {t('tool.back')}
       </Link>
       <h1 className="mt-5 text-4xl font-bold tracking-tight">{t(`tools.${toolId}.name`)}</h1>
       <p className="mt-3 max-w-xl text-muted">{t(`tools.${toolId}.description`)}</p>
 
-      <div className="mt-10 grid gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
-        <div>
-          <Dropzone
-            accept={module?.accept ?? ['application/pdf']}
-            label={
-              <>
-                <p className="font-semibold">{t('tool.drop')}</p>
-                <p className="mt-2 text-sm text-muted">{t('tool.dropHint')}</p>
-              </>
-            }
-            multiple={(module?.inputs.max ?? 1) > 1}
-            onFiles={select}
-          />
-          {warning ? <p className="mt-3 text-sm text-danger">{warning}</p> : null}
-          {gridCapabilities && gridBytes ? (
-            <div className="mt-5">
+      {error ? (
+        <Alert className="mt-8" status="danger">
+          <Alert.Indicator />
+          <Alert.Content>
+            <Alert.Title>{t('toolPage.errorTitle')}</Alert.Title>
+            <Alert.Description>{error.message}</Alert.Description>
+            <details className="mt-3">
+              <summary className="cursor-pointer text-sm text-muted">
+                {t('toolPage.errorDetail')}
+              </summary>
+              <pre className="measure mt-2 max-h-48 overflow-auto rounded-lg bg-ink/5 p-3 text-xs whitespace-pre-wrap dark:bg-paper/5">
+                {error.detail}
+              </pre>
+              <Button className="mt-2" onPress={copyDetail} size="sm" variant="outline">
+                {copied ? t('toolPage.copied') : t('toolPage.copyDetail')}
+              </Button>
+            </details>
+          </Alert.Content>
+        </Alert>
+      ) : null}
+
+      {outputs.length ? (
+        <Card className="mt-8">
+          <Card.Header>
+            <Card.Title className="text-xl font-bold">{t('tool.results')}</Card.Title>
+            <Card.Description>{t('tool.resultReady')}</Card.Description>
+          </Card.Header>
+          <Card.Content>
+            <dl className="grid gap-5 sm:grid-cols-3">
+              <Measure
+                label={t('toolPage.before')}
+                value={`${t('toolPage.fileCount', { count: files.length })} · ${formatBytes(totalIn)}`}
+              />
+              <Measure
+                label={t('toolPage.after')}
+                value={`${t('toolPage.fileCount', { count: outputs.length })} · ${formatBytes(totalOut)}`}
+              />
+              {pages.length ? (
+                <Measure label={t('toolPage.pages')} value={String(pages.length)} />
+              ) : null}
+            </dl>
+            <p className="mt-6 text-sm text-muted">{t('toolPage.outputs')}</p>
+            <ul className="mt-2 divide-y divide-[var(--separator)]">
+              {outputs.map((output) => (
+                <li className="flex items-center justify-between gap-4 py-2" key={output.name}>
+                  <span className="truncate text-sm">{output.name}</span>
+                  <span className="measure text-xs text-muted">
+                    {formatBytes(output.bytes.byteLength)}
+                  </span>
+                </li>
+              ))}
+            </ul>
+          </Card.Content>
+          <Card.Footer className="flex flex-wrap gap-3">
+            <Button onPress={download}>{t('tool.download')}</Button>
+            <Button onPress={startOver} variant="ghost">
+              {t('tool.startOver')}
+            </Button>
+          </Card.Footer>
+        </Card>
+      ) : null}
+
+      {files.length ? (
+        <div className="mt-10 grid items-start gap-6 lg:grid-cols-[minmax(0,1fr)_22rem]">
+          <div className="min-w-0 space-y-5">
+            {gridCapabilities && gridBytes ? (
               <PageGrid
                 bytes={gridBytes}
                 capabilities={gridCapabilities}
@@ -227,97 +328,147 @@ export function ToolPage() {
                 selected={selected}
                 {...(toolId === 'crop' ? { crop, onCropChange: setCrop } : {})}
               />
-            </div>
-          ) : null}
-          {files.length ? (
-            <Surface className="mt-5 divide-y divide-ink/10 p-4 dark:divide-paper/10">
-              {files.map((file) => (
-                <div
-                  className="flex items-center justify-between py-3"
-                  key={`${file.name}-${file.lastModified}`}
-                >
-                  <span className="truncate">{file.name}</span>
-                  <span className="font-mono text-xs text-muted">{formatBytes(file.size)}</span>
-                </div>
-              ))}
-            </Surface>
-          ) : null}
-        </div>
+            ) : null}
 
-        <aside className="space-y-5">
-          <Surface className="p-5">
-            <h2 className="font-semibold">{t('tool.options')}</h2>
-            <Suspense fallback={<p className="mt-3 text-sm text-muted">{t('tool.loading')}</p>}>
-              <OptionsPanel onChange={setOptions} value={options} />
-            </Suspense>
-          </Surface>
+            <Card>
+              <Card.Header>
+                <Card.Title className="text-base font-semibold">{t('toolPage.inputs')}</Card.Title>
+              </Card.Header>
+              <Card.Content className="divide-y divide-[var(--separator)]">
+                {files.map((file) => (
+                  <div
+                    className="flex items-center justify-between gap-4 py-2"
+                    key={`${file.name}-${file.lastModified}`}
+                  >
+                    <span className="truncate">{file.name}</span>
+                    <span className="measure text-xs text-muted">{formatBytes(file.size)}</span>
+                  </div>
+                ))}
+              </Card.Content>
+            </Card>
 
-          {progress !== null ? <Progress label={t('tool.progress')} value={progress} /> : null}
-
-          <Button
-            className="sticky bottom-4 w-full"
-            disabled={!files.length || !module || progress !== null}
-            onClick={() => void run()}
-          >
-            {t('tool.run')}
-          </Button>
-          {progress !== null && progress < 1 ? (
-            <Button className="w-full" onClick={() => controller.current?.abort()} variant="ghost">
-              {t('tool.cancel')}
-            </Button>
-          ) : null}
-
-          {passwordFile ? (
-            <form
-              className="space-y-2"
-              onSubmit={(event) => {
-                event.preventDefault()
-                void run(password)
-              }}
-            >
-              <label className="block text-sm" htmlFor="pdf-password">
-                {t('tool.password', { file: passwordFile })}
-              </label>
-              <input
-                className="w-full rounded-lg border border-ink/15 bg-transparent p-2 dark:border-paper/20"
-                id="pdf-password"
-                onChange={(event) => setPassword(event.target.value)}
-                type="password"
-                value={password}
+            {files.length < maxFiles ? (
+              <Dropzone
+                accept={module?.accept ?? ['application/pdf']}
+                hint={t('toolPage.addFilesHint')}
+                label={t('toolPage.addFiles')}
+                multiple
+                onFiles={select}
               />
-              <Button type="submit">{t('tool.unlock')}</Button>
-            </form>
-          ) : null}
-        </aside>
-      </div>
+            ) : null}
 
-      {error ? (
-        <Surface className="mt-8 p-6">
-          <p>{error.message}</p>
-          <code className="mt-3 block overflow-auto font-mono text-xs text-muted">
-            {error.detail}
-          </code>
-        </Surface>
-      ) : null}
-
-      {outputs.length ? (
-        <Surface className="mt-8 p-6">
-          <h2 className="text-xl font-bold">{t('tool.results')}</h2>
-          <p className="mt-2 text-muted">{t('tool.resultReady')}</p>
-          <div className="mt-5 flex flex-wrap gap-3">
-            <Button onClick={download}>{t('tool.download')}</Button>
-            <Button onClick={startOver} variant="ghost">
-              {t('tool.startOver')}
-            </Button>
+            {warning ? <p className="text-sm text-danger">{warning}</p> : null}
           </div>
-          <p className="mt-4 font-mono text-xs text-muted">
-            {t('tool.beforeAfter', {
-              before: formatBytes(totalIn),
-              after: formatBytes(totalOut),
-            })}
-          </p>
-        </Surface>
-      ) : null}
+
+          {/* The options scroll; the action does not. DESIGN.md: a sticky action bar gets
+              its own row and its own background, and never floats over an input. */}
+          <aside className="flex flex-col gap-5 lg:sticky lg:top-6 lg:max-h-[calc(100dvh-3rem)]">
+            {GRID_ONLY_TOOLS.has(toolId) ? null : (
+              <Card className="lg:min-h-0 lg:overflow-y-auto">
+                <Card.Header>
+                  <Card.Title className="text-base font-semibold">{t('tool.options')}</Card.Title>
+                </Card.Header>
+                <Card.Content>
+                  <Suspense fallback={<Skeleton className="h-24 rounded-lg" />}>
+                    <OptionsPanel onChange={setOptions} value={options} />
+                  </Suspense>
+                </Card.Content>
+              </Card>
+            )}
+
+            <Card className="shrink-0">
+              {running ? (
+                <ProgressBar value={Math.round((progress?.value ?? 0) * 100)}>
+                  <Label className="text-sm text-muted">{stageLabel}</Label>
+                  <ProgressBar.Output className="measure text-xs text-muted" />
+                  <ProgressBar.Track>
+                    <ProgressBar.Fill />
+                  </ProgressBar.Track>
+                </ProgressBar>
+              ) : null}
+              <div className="flex gap-2">
+                <Button
+                  fullWidth
+                  isDisabled={!module}
+                  isPending={running}
+                  onPress={() => void run()}
+                >
+                  {t('tool.run')}
+                </Button>
+                {running ? (
+                  <Button onPress={() => controller.current?.abort()} variant="ghost">
+                    {t('tool.cancel')}
+                  </Button>
+                ) : null}
+              </div>
+            </Card>
+
+            {passwordFile ? (
+              <Card className="shrink-0">
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault()
+                    void run(password)
+                  }}
+                >
+                  <Card.Content className="space-y-3">
+                    <TextField
+                      autoFocus
+                      fullWidth
+                      onChange={setPassword}
+                      type="password"
+                      value={password}
+                    >
+                      <Label>{t('tool.password', { file: passwordFile })}</Label>
+                      <Input />
+                      <Description>{t('toolPage.passwordNote')}</Description>
+                    </TextField>
+                    <Button fullWidth type="submit">
+                      {t('tool.unlock')}
+                    </Button>
+                  </Card.Content>
+                </form>
+              </Card>
+            ) : null}
+          </aside>
+        </div>
+      ) : (
+        <section className="mt-10">
+          {/* The drafting grid shows up where the user is about to put something down. */}
+          <div className="hero-grid grid-fade rounded-[var(--radius)]">
+            <Dropzone
+              accept={module?.accept ?? ['application/pdf']}
+              hint={t('tool.dropHint')}
+              label={t('tool.drop')}
+              multiple={maxFiles > 1}
+              onFiles={select}
+            />
+          </div>
+          <dl className="mt-6 grid gap-4 sm:grid-cols-2">
+            <div className="surface p-5">
+              <dt className="text-sm text-muted">{t('toolPage.takes')}</dt>
+              <dd className="measure mt-1">
+                {formatTypes(module?.accept ?? ['application/pdf'])} ·{' '}
+                {t('toolPage.upTo', { count: maxFiles })}
+              </dd>
+            </div>
+            <div className="surface p-5">
+              <dt className="text-sm text-muted">{t('toolPage.runsHere')}</dt>
+              <dd className="mt-1 text-sm">{t('toolPage.local')}</dd>
+            </div>
+          </dl>
+          {warning ? <p className="mt-4 text-sm text-danger">{warning}</p> : null}
+        </section>
+      )}
+    </div>
+  )
+}
+
+function Measure({ label, value }: { label: string; value: string }) {
+  return (
+    <div>
+      <dt className="text-sm text-muted">{label}</dt>
+      <dd className="measure mt-1 text-lg">{value}</dd>
     </div>
   )
 }

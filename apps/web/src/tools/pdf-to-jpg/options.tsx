@@ -1,43 +1,55 @@
 import type { PdfToJpgOptions } from '@fuckpdf/tools'
+import { Fieldset, Label, NumberField, ToggleButton, ToggleButtonGroup } from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
+
+const FORMATS = [
+  { id: 'jpeg', label: 'formatJpeg' },
+  { id: 'png', label: 'formatPng' },
+  { id: 'webp', label: 'formatWebp' },
+] as const
 
 export default function PdfToJpgOptionsPanel({ value, onChange }: OptionsPanelProps) {
   const { t } = useTranslation()
   const options = value as PdfToJpgOptions
+  const format = options.format ?? 'jpeg'
 
   return (
     <div className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.pdf-to-jpg.dpi')}
-        </span>
-        <input
-          className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-          type="number"
-          min={72}
-          max={300}
-          value={options.dpi ?? 150}
-          onChange={(e) => onChange({ ...options, dpi: Number(e.target.value) })}
-        />
-      </label>
+      <NumberField
+        maxValue={300}
+        minValue={72}
+        onChange={(dpi) => onChange({ ...options, dpi: dpi ?? 150 })}
+        value={options.dpi ?? 150}
+      >
+        <Label>{t('options.pdf-to-jpg.dpi')}</Label>
+        <NumberField.Group>
+          <NumberField.DecrementButton />
+          <NumberField.Input className="measure" />
+          <NumberField.IncrementButton />
+        </NumberField.Group>
+      </NumberField>
 
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.pdf-to-jpg.format')}
-        </span>
-        <select
-          className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-          value={options.format ?? 'jpeg'}
-          onChange={(e) =>
-            onChange({ ...options, format: e.target.value as 'jpeg' | 'png' | 'webp' })
+      <Fieldset>
+        <Fieldset.Legend>{t('options.pdf-to-jpg.format')}</Fieldset.Legend>
+        <ToggleButtonGroup
+          aria-label={t('options.pdf-to-jpg.format')}
+          disallowEmptySelection
+          onSelectionChange={(keys) =>
+            onChange({
+              ...options,
+              format: String([...keys][0] ?? format) as PdfToJpgOptions['format'],
+            })
           }
+          selectedKeys={[format]}
         >
-          <option value="jpeg">JPEG</option>
-          <option value="png">PNG</option>
-          <option value="webp">WebP</option>
-        </select>
-      </label>
+          {FORMATS.map((option) => (
+            <ToggleButton id={option.id} key={option.id}>
+              {t(`options.pdf-to-jpg.${option.label}`)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Fieldset>
     </div>
   )
 }

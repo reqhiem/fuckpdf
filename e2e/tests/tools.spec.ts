@@ -19,10 +19,13 @@ import {
   pageWidths,
 } from '../fixtures/pdf'
 import {
+  chooseOption,
+  chooseToggle,
   openTool,
   pageThumbnail,
   pdfFile,
   runAndDownload,
+  setNumber,
   upload,
   waitForGrid,
 } from '../fixtures/ui'
@@ -51,8 +54,8 @@ test('split every 2 pages returns three parts of two pages each', async ({ page 
   await openTool(page, 'split', 'Split PDF')
   await upload(page, [pdfFile('six.pdf', await sixPagePdf())])
 
-  await page.getByLabel('Split mode').selectOption('every-n')
-  await page.getByLabel('Pages per split').fill('2')
+  await chooseOption(page, 'Split mode', 'Every N pages')
+  await setNumber(page, 'Pages per split', '2')
 
   const bundle = unzip(await runAndDownload(page))
 
@@ -137,7 +140,7 @@ test('rotate writes /Rotate 90 on every page', async ({ page }) => {
   await openTool(page, 'rotate', 'Rotate PDF')
   await upload(page, [pdfFile('three.pdf', await createPagedPdf([101, 102, 103]))])
 
-  await page.getByLabel('Rotation angle').selectOption('90')
+  await chooseToggle(page, 'Rotation angle', '90°')
 
   const output = await runAndDownload(page)
 
@@ -174,10 +177,10 @@ test('crop sets a CropBox that differs from the MediaBox', async ({ page }) => {
   await upload(page, [pdfFile('two.pdf', await createPagedPdf([400, 400], 600))])
   await waitForGrid(page, 2)
 
-  await page.getByLabel('X', { exact: true }).fill('10')
-  await page.getByLabel('Y', { exact: true }).fill('20')
-  await page.getByLabel('Width', { exact: true }).fill('200')
-  await page.getByLabel('Height', { exact: true }).fill('300')
+  await setNumber(page, 'X', '10')
+  await setNumber(page, 'Y', '20')
+  await setNumber(page, 'Width', '200')
+  await setNumber(page, 'Height', '300')
 
   const output = await runAndDownload(page)
   const { crop, media } = await pageBoxes(output, 0)
@@ -191,7 +194,7 @@ test('jpg-to-pdf makes one page at the chosen page size', async ({ page }) => {
   await openTool(page, 'jpg-to-pdf', 'JPG to PDF')
   await upload(page, [{ name: 'shot.png', mimeType: 'image/png', buffer: createPng(200, 100) }])
 
-  await page.getByLabel('Page size').selectOption('Letter')
+  await chooseToggle(page, 'Page size', 'Letter')
 
   const output = await runAndDownload(page)
 
@@ -203,8 +206,8 @@ test('pdf-to-jpg exports one real PNG per page', async ({ page }) => {
   await openTool(page, 'pdf-to-jpg', 'PDF to JPG')
   await upload(page, [pdfFile('pages.pdf', await createPagedPdf([200, 200, 200], 200))])
 
-  await page.getByLabel('Format').selectOption('png')
-  await page.getByLabel('DPI (72-300)').fill('72')
+  await chooseToggle(page, 'Format', 'PNG')
+  await setNumber(page, 'DPI (72-300)', '72')
 
   const bundle = unzip(await runAndDownload(page))
 

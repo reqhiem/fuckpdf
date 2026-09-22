@@ -1,4 +1,5 @@
 import type { MergeOptions } from '@fuckpdf/tools'
+import { Label, TextArea, TextField } from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
 
@@ -6,39 +7,33 @@ export default function MergeOptionsPanel({ value, onChange }: OptionsPanelProps
   const { t } = useTranslation()
   const options = value as MergeOptions
 
+  // Both labels already spell out their line syntax, so neither needs a Description.
   return (
     <div className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.merge.order')}
-        </span>
-        <textarea
-          className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-          value={options.order?.join('\n') ?? ''}
-          onChange={(e) =>
-            onChange({ ...options, order: e.target.value.split('\n').filter(Boolean) })
+      <TextField
+        onChange={(text) => onChange({ ...options, order: text.split('\n').filter(Boolean) })}
+        value={options.order?.join('\n') ?? ''}
+      >
+        <Label>{t('options.merge.order')}</Label>
+        <TextArea />
+      </TextField>
+
+      <TextField
+        onChange={(text) => {
+          const ranges: Record<string, string> = {}
+          for (const line of text.split('\n')) {
+            const [k, v] = line.split('=')
+            if (k && v) ranges[k.trim()] = v.trim()
           }
-        />
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.merge.ranges')}
-        </span>
-        <textarea
-          className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-          value={Object.entries(options.ranges ?? {})
-            .map(([k, v]) => `${k}=${v}`)
-            .join('\n')}
-          onChange={(e) => {
-            const ranges: Record<string, string> = {}
-            for (const line of e.target.value.split('\n')) {
-              const [k, v] = line.split('=')
-              if (k && v) ranges[k.trim()] = v.trim()
-            }
-            onChange({ ...options, ranges })
-          }}
-        />
-      </label>
+          onChange({ ...options, ranges })
+        }}
+        value={Object.entries(options.ranges ?? {})
+          .map(([k, v]) => `${k}=${v}`)
+          .join('\n')}
+      >
+        <Label>{t('options.merge.ranges')}</Label>
+        <TextArea />
+      </TextField>
     </div>
   )
 }

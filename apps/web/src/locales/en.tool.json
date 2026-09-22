@@ -1,0 +1,30 @@
+{
+  "toolPage": {
+    "takes": "Takes",
+    "upTo_one": "{{count}} file",
+    "upTo_other": "up to {{count}} files",
+    "runsHere": "Runs here",
+    "local": "In this tab, on your machine. Open the Network panel: it stays empty.",
+    "inputs": "Files",
+    "addFiles": "Add more files",
+    "addFilesHint": "Drop them here, click to choose, or paste.",
+    "stage": {
+      "load": "Reading the files",
+      "file": "Reading the files",
+      "page": "Working through the pages",
+      "image": "Reading the images",
+      "done": "Finishing"
+    },
+    "fileCount_one": "{{count}} file",
+    "fileCount_other": "{{count}} files",
+    "before": "In",
+    "after": "Out",
+    "pages": "Pages",
+    "outputs": "Output files",
+    "errorTitle": "That run stopped.",
+    "errorDetail": "Technical detail",
+    "copyDetail": "Copy detail",
+    "copied": "Copied",
+    "passwordNote": "Used in this tab to open the file. It is never stored and never sent."
+  }
+}

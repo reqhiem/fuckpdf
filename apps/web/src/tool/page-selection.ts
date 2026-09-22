@@ -52,6 +52,12 @@ export function toPageRangeString(pages: PageRef[], selected: ReadonlySet<string
   return parts.join(',')
 }
 
+/**
+ * Tools that take every instruction from the grid, so their options panel is empty and the
+ * panel's card would be a titled box with nothing in it.
+ */
+export const GRID_ONLY_TOOLS: ReadonlySet<ToolId> = new Set<ToolId>(['organize'])
+
 /** The grid's page list as the ordered operations organize's step consumes. */
 export function toOrganizeOperations(pages: PageRef[]) {
   return pages.map((page) =>

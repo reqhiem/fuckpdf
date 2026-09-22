@@ -1,38 +1,48 @@
 import type { RotateOptions } from '@fuckpdf/tools'
+import {
+  Description,
+  Fieldset,
+  Input,
+  Label,
+  TextField,
+  ToggleButton,
+  ToggleButtonGroup,
+} from '@fuckpdf/ui'
 import { useTranslation } from 'react-i18next'
 import type { OptionsPanelProps } from '../../tool/options-panel'
+
+const ANGLES = [90, 180, 270]
 
 export default function RotateOptionsPanel({ value, onChange }: OptionsPanelProps) {
   const { t } = useTranslation()
   const options = value as RotateOptions
+  const angle = options.angle ?? 90
 
   return (
     <div className="flex flex-col gap-4">
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.rotate.angle')}
-        </span>
-        <select
-          className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-          value={options.angle ?? 90}
-          onChange={(e) => onChange({ ...options, angle: Number(e.target.value) })}
+      <Fieldset>
+        <Fieldset.Legend>{t('options.rotate.angle')}</Fieldset.Legend>
+        <ToggleButtonGroup
+          aria-label={t('options.rotate.angle')}
+          disallowEmptySelection
+          onSelectionChange={(keys) =>
+            onChange({ ...options, angle: Number([...keys][0] ?? angle) })
+          }
+          selectedKeys={[String(angle)]}
         >
-          <option value={90}>90°</option>
-          <option value={180}>180°</option>
-          <option value={270}>270°</option>
-        </select>
-      </label>
-      <label className="flex flex-col gap-1">
-        <span className="text-sm font-medium text-ink dark:text-paper">
-          {t('options.rotate.pages')}
-        </span>
-        <input
-          className="w-full rounded-md border border-ink/20 bg-transparent p-2 text-sm focus:outline-2 focus:outline-accent dark:border-paper/20"
-          type="text"
-          value={options.pages ?? ''}
-          onChange={(e) => onChange({ ...options, pages: e.target.value })}
-        />
-      </label>
+          {ANGLES.map((deg) => (
+            <ToggleButton id={String(deg)} key={deg}>
+              {t(`options.rotate.angle${deg}`)}
+            </ToggleButton>
+          ))}
+        </ToggleButtonGroup>
+      </Fieldset>
+
+      <TextField onChange={(pages) => onChange({ ...options, pages })} value={options.pages ?? ''}>
+        <Label>{t('options.rotate.pages')}</Label>
+        <Input />
+        <Description>{t('options.rotate.pagesHint')}</Description>
+      </TextField>
     </div>
   )
 }

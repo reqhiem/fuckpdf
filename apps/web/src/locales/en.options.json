@@ -11,6 +11,7 @@
       "modeEveryN": "Every N pages",
       "modeSize": "By max file size",
       "ranges": "Custom ranges (comma separated)",
+      "rangesHint": "One output file per range, e.g. 1-3, 4-6, 7.",
       "everyN": "Pages per split",
       "maxSize": "Max file size (bytes)",
       "zip": "Output as ZIP"
@@ -27,16 +28,26 @@
     },
     "rotate": {
       "angle": "Rotation angle",
-      "pages": "Pages to rotate (empty for all)"
+      "angle90": "90°",
+      "angle180": "180°",
+      "angle270": "270°",
+      "pages": "Pages to rotate (empty for all)",
+      "pagesHint": "Single pages and ranges, e.g. 1-5, 8."
     },
     "page-numbers": {
       "position": "Position",
       "firstNumber": "First number",
       "pages": "Pages to number (empty for all)",
+      "pagesHint": "Single pages and ranges, e.g. 1-5, 8.",
       "format": "Format (use {n} and {total})",
+      "formatHint": "{n} is the number on that page, {total} the page count.",
       "font": "Font",
+      "fontHelvetica": "Helvetica",
+      "fontTimesRoman": "Times Roman",
       "size": "Font size",
       "color": "Text color",
+      "colorHint": "Six hex digits, no leading hash.",
+      "colorSwatch": "Pick the text color",
       "margin": "Margin",
       "anchors": {
         "top-left": "Top left",
@@ -60,13 +71,21 @@
       "modePositioned": "Positioned",
       "modeTiled": "Tiled",
       "position": "Position",
+      "positionCenter": "Centre",
+      "positionTopLeft": "Top left",
+      "positionTopRight": "Top right",
+      "positionBottomLeft": "Bottom left",
+      "positionBottomRight": "Bottom right",
       "opacity": "Opacity",
       "rotation": "Rotation (degrees)",
       "layer": "Layer",
       "layerOver": "Over content",
       "layerUnder": "Under content",
       "pages": "Pages to watermark",
+      "pagesHint": "Single pages and ranges, e.g. 1-5, 8. Empty marks every page.",
       "color": "Color",
+      "colorHint": "Six hex digits, no leading hash.",
+      "colorSwatch": "Pick the text color",
       "size": "Size"
     },
     "crop": {
@@ -75,17 +94,29 @@
       "boxWidth": "Width",
       "boxHeight": "Height",
       "pages": "Pages to crop",
+      "pagesHint": "Single pages and ranges, e.g. 1-5, 8. Empty crops every page.",
       "flatten": "Flatten (rasterize)"
     },
     "jpg-to-pdf": {
       "pageSize": "Page size",
+      "pageSizeA4": "A4",
+      "pageSizeLetter": "Letter",
+      "pageSizeFitImage": "Fit image",
       "orientation": "Orientation",
+      "orientationPortrait": "Portrait",
+      "orientationLandscape": "Landscape",
       "margin": "Margin",
-      "fitMode": "Fit mode"
+      "fitMode": "Fit mode",
+      "fitModeContain": "Contain",
+      "fitModeCover": "Cover",
+      "fitModeFill": "Fill"
     },
     "pdf-to-jpg": {
       "dpi": "DPI (72-300)",
-      "format": "Format"
+      "format": "Format",
+      "formatJpeg": "JPEG",
+      "formatPng": "PNG",
+      "formatWebp": "WebP"
     }
   }
 }

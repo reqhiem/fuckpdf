@@ -21,23 +21,44 @@ if (entryAssets.length === 0) {
   process.exit(1)
 }
 
+/**
+ * Engine code is detected by a symbol only the engine itself defines, not by its package
+ * name. The name appears legitimately in shell copy — the privacy section names PDFium and
+ * pdf-lib in prose, and the licence section names them again — so matching the string
+ * `pdf-lib` in the bundle fails on an app that is behaving correctly.
+ */
+const ENGINE_SYMBOLS = [
+  // pdf-lib's main export. Present in the pdf-lib chunk, absent everywhere else.
+  { symbol: 'PDFDocument', engine: 'pdf-lib' },
+  // Every PDFium wasm binding is prefixed this way.
+  { symbol: 'FPDF_', engine: 'PDFium' },
+]
+
+let total = 0
+
 for (const asset of entryAssets) {
   const bytes = await readFile(resolve(dist, `.${asset}`))
-  const gzipBytes = gzipSync(bytes).byteLength
+  total += gzipSync(bytes).byteLength
 
-  if (gzipBytes >= budget) {
-    console.error(
-      `Bundle budget failed: ${asset} is ${gzipBytes} B gzip (limit ${budget} B; set SHELL_BUDGET_BYTES to override)`,
-    )
-    process.exit(1)
-  }
-
-  if (/pdfium|pdf-lib|pdflib/i.test(asset) || /@embedpdf\/pdfium|pdf-lib/i.test(bytes)) {
-    console.error(`Bundle budget failed: engine chunk ${asset} is loaded by index.html`)
-    process.exit(1)
+  const text = bytes.toString('utf8')
+  for (const { symbol, engine } of ENGINE_SYMBOLS) {
+    if (text.includes(symbol)) {
+      console.error(
+        `Bundle budget failed: ${asset} is loaded by index.html and contains ${engine} code (found ${symbol})`,
+      )
+      process.exit(1)
+    }
   }
 }
 
+// The sum, not each asset: what matters is everything the browser must fetch to boot.
+if (total >= budget) {
+  console.error(
+    `Bundle budget failed: the shell is ${total} B gzip across ${entryAssets.length} asset(s) (limit ${budget} B; set SHELL_BUDGET_BYTES to override)`,
+  )
+  process.exit(1)
+}
+
 console.log(
-  `Bundle budget passed: ${entryAssets.join(', ')} below ${budget} B gzip; no engine entry chunks`,
+  `Bundle budget passed: shell is ${total} B gzip across ${entryAssets.length} asset(s), under ${budget} B; no engine code in it`,
 )

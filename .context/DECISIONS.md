@@ -73,3 +73,38 @@ there is something to put in it.
 `packages/engine-pdfium` earns its boundary: wasm instantiation, document lifetime and
 memory release are real, and the same contract is implemented twice — in-process for Node
 tests, and over a Web Worker for the browser (`apps/web/src/workers/engine.ts`).
+
+## D8 — HeroUI v3 as the design system
+
+The hand-rolled primitives in `packages/ui` were about 200 lines carrying a Button, a Card,
+a Badge, a Dialog and a Progress bar. They looked plain and, more importantly, they were
+accumulating accessibility debt: a nameless link, then nine nameless toggle buttons, both
+caught late. Every one of those is a solved problem in React Aria.
+
+Adopted **HeroUI v3** (Tailwind v4 + React Aria Components). It fits the stack exactly:
+Tailwind v4 with `@theme` and no config file is what this repo already does, and React Aria
+gives keyboard behaviour, focus management and ARIA wiring that were being written by hand.
+
+Not v2, which is a different library: no provider, no framer-motion, compound components,
+`onPress` over `onClick`.
+
+**Brand identity is preserved, not replaced.** The shipped palette (ink, paper, the orange
+accent) stays; it is applied by remapping HeroUI's semantic CSS variables in
+`apps/web/src/styles/tokens.css`. No component overrides HeroUI's own classes, so there is
+one bridge file instead of a per-component skin.
+
+Costs accepted:
+
+- All 72 components' CSS ships, because `@heroui/styles` is one stylesheet. Measured at
+  39 KB gzip for the lot. Importing 20 individual component stylesheets to save part of
+  that would trade one import line for a maintenance trap where adding a component
+  silently ships it unstyled. Not worth it.
+- `packages/ui` is now a re-export seam rather than an implementation. App code imports
+  from `@fuckpdf/ui`, never `@heroui/react`, so there is still one list of what is in the
+  system.
+
+**Known consequence for the test suite:** HeroUI's `Select` is a React Aria listbox, not a
+native `<select>`, so Playwright's `selectOption()` no longer drives it. The four affected
+tests go through a `chooseOption` helper in `e2e/fixtures/ui.ts` that opens the trigger by
+label and picks the option by its visible name. That is a stricter assertion than before,
+not a weaker one: it only passes if the control is reachable by accessible name.

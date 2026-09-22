@@ -9,7 +9,9 @@
     ".": "./src/index.tsx"
   },
   "dependencies": {
-    "lucide-react": "^1.47.0"
+    "@heroui/react": "^3.2.6",
+    "lucide-react": "^1.47.0",
+    "react-aria-components": "^1.21.1"
   },
   "peerDependencies": {
     "react": "^19.0.0"
