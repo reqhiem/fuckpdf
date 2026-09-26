@@ -15,7 +15,6 @@ export type PageSeo = {
   description: string
   url: string
   heading: string
-  lead: string
   tags: Tag[]
   jsonLd: string
 }
@@ -30,11 +29,6 @@ export function seoFor(pathname: string): PageSeo {
   const { title, description } = en.seo.pages[key]
   const url = key === 'home' ? `${ORIGIN}/` : `${ORIGIN}/${key}`
   const heading = isTool(key) ? en.tools[key].name : isStatic(key) ? en[key].title : en.seo.site
-  const lead = isTool(key)
-    ? en.tools[key].description
-    : isStatic(key)
-      ? en[key].lead
-      : en.landing.dek
 
   const meta = (attr: 'name' | 'property', name: string, content: string): Tag => ({
     tag: 'meta',
@@ -86,13 +80,13 @@ export function seoFor(pathname: string): PageSeo {
     '\\u003c',
   )
 
-  return { title, description, url, heading, lead, tags, jsonLd }
+  return { title, description, url, heading, tags, jsonLd }
 }
 
 const escapeHtml = (value: string) =>
   value.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
-export function prerender(template: string, pathname: string): string {
+export function prerender(template: string, pathname: string, body: string): string {
   const page = seoFor(pathname)
   const head = [
     `<title>${escapeHtml(page.title)}</title>`,
@@ -104,15 +98,9 @@ export function prerender(template: string, pathname: string): string {
     ),
     `<script type="application/ld+json" id="ld">${page.jsonLd}</script>`,
   ].join('\n    ')
-  const links = TOOL_IDS.map(
-    (id) =>
-      `<li><a href="/${id}">${escapeHtml(en.tools[id].name)}</a>: ${escapeHtml(en.tools[id].description)}</li>`,
-  ).join('')
-  // Plain HTML for crawlers and no-JS visitors; createRoot replaces it on mount.
-  const body = `<main class="mx-auto max-w-7xl px-6 py-8"><h1>${escapeHtml(page.heading)}</h1><p>${escapeHtml(page.lead)}</p><p>${escapeHtml(en.seo.how)}</p><p>${escapeHtml(en.seo.privacy)}</p><nav aria-label="${escapeHtml(en.seo.tools)}"><ul>${links}</ul></nav></main>`
   return template
     .replace(/<title>.*?<\/title>/, head)
-    .replace('<div id="root"></div>', `<div id="root">${body}</div>`)
+    .replace('<div id="root"></div>', () => `<div id="root">${body}</div>`)
 }
 
 export const sitemap = () =>

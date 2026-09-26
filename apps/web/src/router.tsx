@@ -1,11 +1,11 @@
 import { TOOL_IDS } from '@fuckpdf/tools'
-import { createBrowserRouter } from 'react-router'
+import type { RouteObject } from 'react-router'
 import { Landing } from './shell/Landing'
 import { Shell } from './shell/Shell'
 import { StaticPage } from './shell/StaticPage'
 
 // The tool page is lazy so it stays out of the shell bundle.
-export const router = createBrowserRouter([
+export const routes: RouteObject[] = [
   {
     element: <Shell />,
     children: [
@@ -16,4 +16,4 @@ export const router = createBrowserRouter([
       { path: 'licenses', element: <StaticPage page="licenses" /> },
     ],
   },
-])
+]

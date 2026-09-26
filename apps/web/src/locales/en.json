@@ -2,9 +2,6 @@
   "seo": {
     "site": "fuckpdf",
     "home": "Home",
-    "tools": "All PDF tools",
-    "how": "Drop your file, pick the options, download the result. The work happens in a Web Worker in your browser tab, so the file never leaves your device.",
-    "privacy": "No upload, no account, no watermark, no queue. Free and open source.",
     "pages": {
       "home": {
         "title": "fuckpdf — free PDF tools that never upload your files",

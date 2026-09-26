@@ -77,3 +77,19 @@ page and the editor's "owns its height" rule were written into the prompts).
 Lesson: a named Agent launch that reports a tmux/Orca pane error may still have started.
 One did, and two writers interleaved edits in the grid's files until the stray process was
 killed. After a launch error, check `ps` for `--agent-name` before relaunching.
+
+### Wave 4 — prerendered first paint (D11)
+
+Two in-session agents, which was all the work supported: the seam (`vite.config.ts`,
+`prerender.tsx`, `main.tsx`, `router.tsx`, `seo.ts`) is a single coupled change, so the
+coordinator kept it, along with `e2e/`.
+
+| Agent | Owns | Task |
+|---|---|---|
+| `ssr-audit` (read-only) | nothing | Import graph from `router.tsx`: Node crashes at import time, render-time browser reads, CSS imported from JS, the router's static APIs |
+| `theme-boot` | `index.html`, `_headers`, `theme-boot.test.ts` | Theme applied before paint by an inline script, allowed through its CSP hash |
+
+Lesson: `vite preview` sent no CSP, so e2e could never catch a CSP bug. The `data:` fonts
+Vite inlines had been blocked in production all along. The router's hydration script and
+React's `$RC` reveal script would have shipped the same way. Preview now serves the
+`_headers` CSP.

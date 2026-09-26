@@ -151,3 +151,21 @@ is selected, because an empty selection reaches the step as "" and the step read
 every page. Crop sends the grid selection as `pages`, and a drawn crop box writes its
 numbers into the form, so the fields and the page never disagree. Crop's Flatten switch was
 removed; the step's flatten path throws on every call.
+
+## D11 — Every route is the real app, prerendered and hydrated
+
+**Decided.** The build used to put a plain-text summary into `#root` for crawlers. On 3G that
+summary was the page for seconds, CSS applied and unstyled-looking, until React replaced it.
+Now `vite build` renders each route in `ROUTES` with `react-dom/static` and the router's
+static handler (`src/prerender.tsx`), and `main.tsx` hydrates it. The first paint is the
+page itself.
+
+Rules that keep it working:
+
+- Nothing rendered may differ between the build and the browser's first render. Browser
+  state (theme, storage, viewport) is read in effects, as `Shell` already does.
+  `e2e/tests/prerender.spec.ts` fails on any hydration error.
+- No inline scripts beyond the theme boot script in `index.html`. That one runs before
+  paint so dark mode does not flash light, and it is allowed by its `sha256` in `_headers`.
+  Editing it means updating the hash; `theme-boot.test.ts` fails otherwise.
+- No top-level `await` in `main.tsx`. It turns every shared module into its own chunk.

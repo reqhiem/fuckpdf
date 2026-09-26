@@ -115,7 +115,7 @@ Ratings: **A** full parity client-side · **B** parity with caveats · **C** deg
 
 - `wrangler.jsonc`: `assets.directory = "./dist"`, `assets.not_found_handling = "single-page-application"`, **no `main`** — zero Worker invocations, zero server code.
 - `public/_headers`:
-  - `/*` → `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` (enables SharedArrayBuffer for threaded wasm), strict CSP (`default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' blob: data:; font-src 'self'; worker-src 'self' blob:`), `Referrer-Policy: no-referrer`, `Permissions-Policy` minimal (camera reserved for v2 scan).
+  - `/*` → `Cross-Origin-Opener-Policy: same-origin`, `Cross-Origin-Embedder-Policy: require-corp` (enables SharedArrayBuffer for threaded wasm), strict CSP (`default-src 'self'; script-src 'self' 'wasm-unsafe-eval'; connect-src 'self'; img-src 'self' blob: data:; font-src 'self'; worker-src 'self' blob:`; `script-src` also allows the theme boot script by its `sha256`, see D11), `Referrer-Policy: no-referrer`, `Permissions-Policy` minimal (camera reserved for v2 scan).
   - `/assets/*` and `/wasm/*` → `Cache-Control: public, max-age=31536000, immutable` (content-hashed filenames).
   - `/index.html` → `Cache-Control: no-cache`.
 - Custom domain `fuckpdf.reqhiem.dev` bound to the Worker. DNS for `reqhiem.dev` stays where it is (Vercel site untouched); only the subdomain CNAMEs to Cloudflare.
